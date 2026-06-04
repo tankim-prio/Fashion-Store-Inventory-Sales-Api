@@ -4,6 +4,7 @@ from app.database import Base, engine
 from app.models import (
     category,
     customer,
+    invoice,
     order,
     payment,
     product,
@@ -13,6 +14,7 @@ from app.models import (
 from app.routers import (
     categories,
     customers,
+    invoices,
     orders,
     payments,
     product_variants,
@@ -35,6 +37,7 @@ app.include_router(stock_router.router)
 app.include_router(customers.router)
 app.include_router(orders.router)
 app.include_router(payments.router)
+app.include_router(invoices.router)
 
 
 @app.get("/")
