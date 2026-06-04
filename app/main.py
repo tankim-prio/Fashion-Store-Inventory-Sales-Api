@@ -5,6 +5,7 @@ from app.models import (
     category,
     customer,
     order,
+    payment,
     product,
     product_variant,
     stock,
@@ -13,6 +14,7 @@ from app.routers import (
     categories,
     customers,
     orders,
+    payments,
     product_variants,
     products,
     stock as stock_router,
@@ -32,6 +34,7 @@ app.include_router(product_variants.router)
 app.include_router(stock_router.router)
 app.include_router(customers.router)
 app.include_router(orders.router)
+app.include_router(payments.router)
 
 
 @app.get("/")
