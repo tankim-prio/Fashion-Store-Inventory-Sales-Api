@@ -25,3 +25,4 @@ class ProductVariant(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     product = relationship("Product", back_populates="variants")
+    stock_history = relationship("StockHistory", back_populates="variant")
