@@ -1,4 +1,5 @@
 from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -11,3 +12,5 @@ class Category(Base):
     name = Column(String, nullable=False, unique=True, index=True)
     description = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    products = relationship("Product", back_populates="category")
