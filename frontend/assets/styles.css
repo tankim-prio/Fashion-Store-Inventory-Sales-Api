@@ -271,3 +271,111 @@ select {
 .small-btn.danger:hover {
     background: #b91c1c;
 }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.stat-card .stat-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #111827;
+}
+
+.stat-card .stat-note {
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.dashboard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.badge {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.badge-paid,
+.badge-active,
+.badge-admin {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-pending,
+.badge-staff {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-failed,
+.badge-cancelled,
+.badge-refunded,
+.badge-inactive,
+.badge-low {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-normal {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.filter-box {
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.action-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+@media (max-width: 1000px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

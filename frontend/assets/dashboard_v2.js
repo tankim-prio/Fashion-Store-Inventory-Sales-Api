@@ -1770,3 +1770,441 @@ async function deleteUser(id) {
         showMessage(error.message, "error");
     }
 }
+
+function getBadge(value) {
+    if (value === true) {
+        return `<span class="badge badge-active">active</span>`;
+    }
+
+    if (value === false) {
+        return `<span class="badge badge-inactive">inactive</span>`;
+    }
+
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    const text = String(value).toLowerCase();
+
+    if (["paid", "active", "admin"].includes(text)) {
+        return `<span class="badge badge-paid">${value}</span>`;
+    }
+
+    if (["pending", "staff"].includes(text)) {
+        return `<span class="badge badge-pending">${value}</span>`;
+    }
+
+    if (["failed", "cancelled", "refunded", "inactive"].includes(text)) {
+        return `<span class="badge badge-failed">${value}</span>`;
+    }
+
+    return value;
+}
+
+function formatCell(key, value) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    if (key.includes("status") || key === "role" || key === "is_active") {
+        return getBadge(value);
+    }
+
+    if (typeof value === "object") {
+        return JSON.stringify(value);
+    }
+
+    return value;
+}
+
+function renderTable(data) {
+    if (!Array.isArray(data)) {
+        data = [data];
+    }
+
+    if (data.length === 0) {
+        return "<p>No data found.</p>";
+    }
+
+    const keys = Object.keys(data[0]);
+
+    let html = `<div class="table-wrapper"><table><thead><tr>`;
+
+    keys.forEach(key => {
+        html += `<th>${key}</th>`;
+    });
+
+    html += `</tr></thead><tbody>`;
+
+    data.forEach(row => {
+        html += `<tr>`;
+
+        keys.forEach(key => {
+            html += `<td>${formatCell(key, row[key])}</td>`;
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    return html;
+}
+
+function safeNumber(value) {
+    const numberValue = Number(value);
+    return Number.isNaN(numberValue) ? 0 : numberValue;
+}
+
+function money(value) {
+    return safeNumber(value).toFixed(2);
+}
+
+async function loadDashboard() {
+    setPage("Dashboard", "Business overview, stock health, sales summary and recent activity.");
+
+    setContent(`
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Products</h3>
+                <div class="stat-number" id="statProducts">...</div>
+                <div class="stat-note">Active product catalog</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Stock</h3>
+                <div class="stat-number" id="statStock">...</div>
+                <div class="stat-note">All variant quantity</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Orders</h3>
+                <div class="stat-number" id="statOrders">...</div>
+                <div class="stat-note">All customer orders</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Profit</h3>
+                <div class="stat-number" id="statProfit">...</div>
+                <div class="stat-note">Based on profit report</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Categories</h3>
+                <div class="stat-number" id="statCategories">...</div>
+                <div class="stat-note">Product groups</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Customers</h3>
+                <div class="stat-number" id="statCustomers">...</div>
+                <div class="stat-note">Saved customers</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Paid Orders</h3>
+                <div class="stat-number" id="statPaidOrders">...</div>
+                <div class="stat-note">Completed sales</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Low Stock</h3>
+                <div class="stat-number" id="statLowStock">...</div>
+                <div class="stat-note">Stock less than or equal 5</div>
+            </div>
+        </div>
+
+        <div class="dashboard-row">
+            <div class="content-box">
+                <div class="action-title">
+                    <h2>Recent Orders</h2>
+                    <button class="small-btn" onclick="loadOrdersPage()">View Orders</button>
+                </div>
+                <div id="recentOrdersTable">Loading...</div>
+            </div>
+
+            <div class="content-box">
+                <div class="action-title">
+                    <h2>Low Stock Preview</h2>
+                    <button class="small-btn" onclick="loadStockPage()">Manage Stock</button>
+                </div>
+                <div id="dashboardLowStockTable">Loading...</div>
+            </div>
+        </div>
+    `);
+
+    await refreshDashboardStats();
+}
+
+async function refreshDashboardStats() {
+    try {
+        const categories = await apiGet("/categories/");
+        const products = await apiGet("/products/");
+        const variants = await apiGet("/variants/");
+        const customers = await apiGet("/customers/");
+        const orders = await apiGet("/orders/");
+        const profit = await apiGet("/reports/profit");
+
+        const totalStock = variants.reduce((sum, item) => sum + safeNumber(item.stock_quantity), 0);
+        const lowStockItems = variants.filter(item => safeNumber(item.stock_quantity) <= 5);
+        const paidOrders = orders.filter(order => String(order.status).toLowerCase() === "paid");
+
+        document.getElementById("statProducts").innerText = products.length;
+        document.getElementById("statStock").innerText = totalStock;
+        document.getElementById("statOrders").innerText = orders.length;
+        document.getElementById("statProfit").innerText = money(profit.total_profit || profit.profit || 0);
+
+        document.getElementById("statCategories").innerText = categories.length;
+        document.getElementById("statCustomers").innerText = customers.length;
+        document.getElementById("statPaidOrders").innerText = paidOrders.length;
+        document.getElementById("statLowStock").innerText = lowStockItems.length;
+
+        const recentOrders = orders.slice(-5).reverse();
+        document.getElementById("recentOrdersTable").innerHTML = renderTable(recentOrders);
+
+        const lowStockPreview = lowStockItems.slice(0, 5);
+        document.getElementById("dashboardLowStockTable").innerHTML = renderTable(lowStockPreview);
+
+    } catch (error) {
+        setContent(`<div class="content-box"><p class="error-text">${error.message}</p></div>`);
+    }
+}
+
+async function loadOrdersPage() {
+    setPage("Orders", "Create orders, filter by customer/status and view order list.");
+
+    setContent(`
+        <div class="content-box">
+            <h2>Create Order</h2>
+            <div id="messageBox" class="message"></div>
+
+            <form id="orderForm" class="form-grid">
+                <select id="orderCustomer" required>
+                    <option value="">Select customer</option>
+                </select>
+
+                <select id="orderVariant" required>
+                    <option value="">Select variant</option>
+                </select>
+
+                <input id="orderQuantity" type="number" placeholder="Quantity" required>
+                <input id="orderDiscount" type="number" placeholder="Discount" value="0">
+
+                <button type="submit">Create Order</button>
+            </form>
+        </div>
+
+        <div class="content-box">
+            <h2>Order Filters</h2>
+
+            <div class="filter-box">
+                <div class="form-grid">
+                    <select id="filterOrderCustomer">
+                        <option value="">All customers</option>
+                    </select>
+
+                    <select id="filterOrderStatus">
+                        <option value="">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+
+                    <button onclick="refreshOrders()">Apply Filter</button>
+                </div>
+            </div>
+
+            <div id="orderTable">Loading...</div>
+        </div>
+    `);
+
+    await loadCustomerDropdown();
+    await loadVariantDropdown();
+    await loadOrderFilterCustomerDropdown();
+
+    document.getElementById("orderForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const createdBy = localStorage.getItem("user_email") || "Dashboard User";
+
+        try {
+            await apiPost("/orders/", {
+                customer_id: Number(document.getElementById("orderCustomer").value),
+                items: [
+                    {
+                        variant_id: Number(document.getElementById("orderVariant").value),
+                        quantity: Number(document.getElementById("orderQuantity").value)
+                    }
+                ],
+                discount: Number(document.getElementById("orderDiscount").value || 0),
+                created_by: createdBy
+            });
+
+            showMessage("Order created successfully. Stock reduced automatically.");
+
+            document.getElementById("orderQuantity").value = "";
+            document.getElementById("orderDiscount").value = "0";
+
+            await refreshOrders();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    });
+
+    await refreshOrders();
+}
+
+async function loadOrderFilterCustomerDropdown() {
+    const select = document.getElementById("filterOrderCustomer");
+    const customers = await apiGet("/customers/");
+
+    customers.forEach(customer => {
+        const option = document.createElement("option");
+        option.value = customer.id;
+        option.innerText = `${customer.id} - ${customer.name}`;
+        select.appendChild(option);
+    });
+}
+
+async function refreshOrders() {
+    try {
+        const customerId = document.getElementById("filterOrderCustomer") ? document.getElementById("filterOrderCustomer").value : "";
+        const status = document.getElementById("filterOrderStatus") ? document.getElementById("filterOrderStatus").value : "";
+
+        const params = new URLSearchParams();
+
+        if (customerId) params.append("customer_id", customerId);
+        if (status) params.append("status", status);
+
+        const url = params.toString() ? `/orders/?${params.toString()}` : "/orders/";
+        const data = await apiGet(url);
+
+        document.getElementById("orderTable").innerHTML = renderTable(data);
+
+    } catch (error) {
+        document.getElementById("orderTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadPaymentsPage() {
+    setPage("Payments", "Create payments, filter payments and track payment status.");
+
+    setContent(`
+        <div class="content-box">
+            <h2>Create Payment</h2>
+            <div id="messageBox" class="message"></div>
+
+            <form id="paymentForm" class="form-grid">
+                <select id="paymentOrder" required>
+                    <option value="">Select order</option>
+                </select>
+
+                <select id="paymentMethod" required>
+                    <option value="">Select payment method</option>
+                    <option value="cash">Cash</option>
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="card">Card</option>
+                </select>
+
+                <input id="paymentAmount" type="number" placeholder="Amount" required>
+
+                <select id="paymentStatus" required>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
+                </select>
+
+                <input id="transactionId" type="text" placeholder="Transaction ID optional">
+
+                <button type="submit">Create Payment</button>
+            </form>
+        </div>
+
+        <div class="content-box">
+            <h2>Payment Filters</h2>
+
+            <div class="filter-box">
+                <div class="form-grid">
+                    <input id="filterPaymentOrderId" type="number" placeholder="Order ID">
+
+                    <select id="filterPaymentStatus">
+                        <option value="">All statuses</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+
+                    <select id="filterPaymentMethod">
+                        <option value="">All methods</option>
+                        <option value="cash">Cash</option>
+                        <option value="bkash">bKash</option>
+                        <option value="nagad">Nagad</option>
+                        <option value="card">Card</option>
+                    </select>
+
+                    <button onclick="refreshPayments()">Apply Filter</button>
+                </div>
+            </div>
+
+            <div id="paymentTable">Loading...</div>
+        </div>
+    `);
+
+    await loadOrderDropdown();
+
+    document.getElementById("paymentForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const transactionValue = document.getElementById("transactionId").value;
+
+        try {
+            await apiPost("/payments/", {
+                order_id: Number(document.getElementById("paymentOrder").value),
+                payment_method: document.getElementById("paymentMethod").value,
+                amount: Number(document.getElementById("paymentAmount").value),
+                status: document.getElementById("paymentStatus").value,
+                transaction_id: transactionValue || null
+            });
+
+            showMessage("Payment created successfully.");
+
+            document.getElementById("paymentAmount").value = "";
+            document.getElementById("transactionId").value = "";
+
+            await refreshPayments();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    });
+
+    await refreshPayments();
+}
+
+async function refreshPayments() {
+    try {
+        const orderId = document.getElementById("filterPaymentOrderId") ? document.getElementById("filterPaymentOrderId").value : "";
+        const status = document.getElementById("filterPaymentStatus") ? document.getElementById("filterPaymentStatus").value : "";
+        const method = document.getElementById("filterPaymentMethod") ? document.getElementById("filterPaymentMethod").value : "";
+
+        const params = new URLSearchParams();
+
+        if (orderId) params.append("order_id", orderId);
+        if (status) params.append("status", status);
+        if (method) params.append("payment_method", method);
+
+        const url = params.toString() ? `/payments/?${params.toString()}` : "/payments/";
+        const data = await apiGet(url);
+
+        document.getElementById("paymentTable").innerHTML = renderTable(data);
+
+    } catch (error) {
+        document.getElementById("paymentTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
