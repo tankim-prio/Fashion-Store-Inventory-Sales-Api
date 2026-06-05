@@ -1,25 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth_dependency import require_admin
 from app.models.user import User
-from app.schemas.user import UserCreateByAdmin, UserResponse, UserUpdate
-from app.services.auth_service import ALLOWED_ROLES, create_user_by_admin
-
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.dependencies.auth_dependency import require_admin
+from app.services.auth_service import (
+    create_user_by_admin,
+    update_user_by_admin,
+    deactivate_user_by_admin,
 )
+
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/", response_model=UserResponse)
 def create_user(
-    user_data: UserCreateByAdmin,
+    user: UserCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return create_user_by_admin(db=db, user_data=user_data)
+    return create_user_by_admin(db=db, user_data=user)
 
 
 @router.get("/", response_model=list[UserResponse])
@@ -39,6 +40,7 @@ def get_user(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
+        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
@@ -47,42 +49,11 @@ def get_user(
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
-    user_data: UserUpdate,
+    user: UserUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    update_data = user_data.model_dump(exclude_unset=True)
-
-    if "role" in update_data and update_data["role"] not in ALLOWED_ROLES:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid role. Allowed roles: admin, staff"
-        )
-
-    if "email" in update_data:
-        existing_user = db.query(User).filter(
-            User.email == update_data["email"],
-            User.id != user_id
-        ).first()
-
-        if existing_user:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already registered"
-            )
-
-    for key, value in update_data.items():
-        setattr(user, key, value)
-
-    db.commit()
-    db.refresh(user)
-
-    return user
+    return update_user_by_admin(db=db, user_id=user_id, user_data=user)
 
 
 @router.delete("/{user_id}")
@@ -91,18 +62,11 @@ def delete_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user.id == current_user.id:
+    if current_user.id == user_id:
+        from fastapi import HTTPException
         raise HTTPException(
             status_code=400,
             detail="You cannot deactivate your own account"
         )
 
-    user.is_active = False
-    db.commit()
-
-    return {"message": "User deactivated successfully"}
+    return deactivate_user_by_admin(db=db, user_id=user_id)

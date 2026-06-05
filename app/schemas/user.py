@@ -1,39 +1,42 @@
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+from pydantic import BaseModel, EmailStr
 
 
 class UserRegister(BaseModel):
     full_name: str
-    email: str
+    email: EmailStr
     password: str
 
 
-class UserCreateByAdmin(BaseModel):
+class UserCreate(BaseModel):
     full_name: str
-    email: str
+    email: EmailStr
     password: str
-    role: str = "staff"
+    role: str
 
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
+    full_name: str
+    email: EmailStr
+    role: str
+    is_active: bool
 
 
 class UserResponse(BaseModel):
     id: int
     full_name: str
-    email: str
+    email: EmailStr
     role: str
     is_active: bool
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class TokenResponse(BaseModel):
     access_token: str
-    token_type: str = "bearer"
+    token_type: str
     user: UserResponse
