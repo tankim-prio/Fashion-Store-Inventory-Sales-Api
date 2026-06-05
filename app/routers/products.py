@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies.auth_dependency import require_admin, require_staff_or_admin
 from app.models.category import Category
 from app.models.product import Product
+from app.models.user import User
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
 
 router = APIRouter(
@@ -15,14 +17,15 @@ router = APIRouter(
 
 
 @router.post("/", response_model=ProductResponse)
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+def create_product(
+    product: ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     category = db.query(Category).filter(Category.id == product.category_id).first()
 
     if not category:
-        raise HTTPException(
-            status_code=404,
-            detail="Category not found"
-        )
+        raise HTTPException(status_code=404, detail="Category not found")
 
     new_product = Product(**product.model_dump())
 
@@ -37,7 +40,8 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 def get_products(
     search: Optional[str] = None,
     category_id: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_staff_or_admin)
 ):
     query = db.query(Product).filter(Product.is_active.is_(True))
 
@@ -47,22 +51,22 @@ def get_products(
     if category_id:
         query = query.filter(Product.category_id == category_id)
 
-    products = query.all()
-    return products
+    return query.all()
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_staff_or_admin)
+):
     product = db.query(Product).filter(
         Product.id == product_id,
         Product.is_active.is_(True)
     ).first()
 
     if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
+        raise HTTPException(status_code=404, detail="Product not found")
 
     return product
 
@@ -71,7 +75,8 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 def update_product(
     product_id: int,
     product_data: ProductUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     product = db.query(Product).filter(
         Product.id == product_id,
@@ -79,10 +84,7 @@ def update_product(
     ).first()
 
     if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
+        raise HTTPException(status_code=404, detail="Product not found")
 
     update_data = product_data.model_dump(exclude_unset=True)
 
@@ -92,10 +94,7 @@ def update_product(
         ).first()
 
         if not category:
-            raise HTTPException(
-                status_code=404,
-                detail="Category not found"
-            )
+            raise HTTPException(status_code=404, detail="Category not found")
 
     for key, value in update_data.items():
         setattr(product, key, value)
@@ -107,20 +106,20 @@ def update_product(
 
 
 @router.delete("/{product_id}")
-def delete_product(product_id: int, db: Session = Depends(get_db)):
+def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
     product = db.query(Product).filter(
         Product.id == product_id,
         Product.is_active.is_(True)
     ).first()
 
     if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
+        raise HTTPException(status_code=404, detail="Product not found")
 
     product.is_active = False
-
     db.commit()
 
     return {"message": "Product deleted successfully"}

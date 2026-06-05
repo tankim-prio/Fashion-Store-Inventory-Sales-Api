@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.models import (
@@ -47,9 +48,13 @@ app.include_router(payments.router)
 app.include_router(invoices.router)
 app.include_router(reports.router)
 
+app.mount("/site", StaticFiles(directory="frontend", html=True), name="site")
+
 
 @app.get("/")
 def home():
     return {
-        "message": "Fashion Store Inventory API is running successfully"
+        "message": "Fashion Store Inventory API is running successfully",
+        "frontend": "http://127.0.0.1:8000/site/login.html",
+        "docs": "http://127.0.0.1:8000/docs"
     }

@@ -9,11 +9,6 @@ class UserRegister(BaseModel):
     password: str
 
 
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-
 class UserCreateByAdmin(BaseModel):
     full_name: str
     email: str

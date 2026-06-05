@@ -9,6 +9,16 @@ from app.utils.security import hash_password, verify_password
 ALLOWED_ROLES = ["admin", "staff"]
 
 
+def create_token_for_user(user: User):
+    return create_access_token(
+        data={
+            "sub": user.email,
+            "user_id": user.id,
+            "role": user.role
+        }
+    )
+
+
 def register_user(db: Session, user_data):
     if len(user_data.password) < 6:
         raise HTTPException(
@@ -27,27 +37,21 @@ def register_user(db: Session, user_data):
         )
 
     total_users = db.query(User).count()
-
     role = "admin" if total_users == 0 else "staff"
 
     new_user = User(
         full_name=user_data.full_name,
         email=user_data.email,
         password_hash=hash_password(user_data.password),
-        role=role
+        role=role,
+        is_active=True
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    token = create_access_token(
-        data={
-            "sub": new_user.email,
-            "user_id": new_user.id,
-            "role": new_user.role
-        }
-    )
+    token = create_token_for_user(new_user)
 
     return {
         "access_token": token,
@@ -56,21 +60,21 @@ def register_user(db: Session, user_data):
     }
 
 
-def login_user(db: Session, login_data):
-    user = db.query(User).filter(
-        User.email == login_data.email
-    ).first()
+def login_user(db: Session, email: str, password: str):
+    user = db.query(User).filter(User.email == email).first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
-    if not verify_password(login_data.password, user.password_hash):
+    if not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     if not user.is_active:
@@ -79,13 +83,7 @@ def login_user(db: Session, login_data):
             detail="Inactive user"
         )
 
-    token = create_access_token(
-        data={
-            "sub": user.email,
-            "user_id": user.id,
-            "role": user.role
-        }
-    )
+    token = create_token_for_user(user)
 
     return {
         "access_token": token,
@@ -121,7 +119,8 @@ def create_user_by_admin(db: Session, user_data):
         full_name=user_data.full_name,
         email=user_data.email,
         password_hash=hash_password(user_data.password),
-        role=user_data.role
+        role=user_data.role,
+        is_active=True
     )
 
     db.add(new_user)

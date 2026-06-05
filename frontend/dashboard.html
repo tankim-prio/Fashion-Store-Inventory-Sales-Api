@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Fashion Store API</title>
+    <link rel="stylesheet" href="/site/assets/styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">Fashion Store</div>
+
+        <div class="nav-links">
+            <button onclick="loadSection('products')">Products</button>
+            <button onclick="loadSection('categories')">Categories</button>
+            <button onclick="loadSection('variants')">Variants</button>
+            <button onclick="loadSection('stock')">Stock</button>
+            <button onclick="loadSection('customers')">Customers</button>
+            <button onclick="loadSection('orders')">Orders</button>
+            <button onclick="loadSection('payments')">Payments</button>
+            <button onclick="loadSection('invoices')">Invoices</button>
+            <button onclick="loadSection('reports')">Reports</button>
+            <button onclick="loadSection('users')">Users</button>
+        </div>
+
+        <div class="account">
+            <span id="accountInfo">Loading...</span>
+            <button class="logout-btn" onclick="logout()">Sign out</button>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <section class="welcome">
+            <h1>Dashboard</h1>
+            <p>Manage your fashion store inventory, sales, orders, payments and reports.</p>
+        </section>
+
+        <section class="cards">
+            <div class="card" onclick="loadSection('products')">
+                <h3>Products</h3>
+                <p>Manage product list and search items.</p>
+            </div>
+
+            <div class="card" onclick="loadSection('variants')">
+                <h3>Variants</h3>
+                <p>Manage size, color, price, SKU and stock.</p>
+            </div>
+
+            <div class="card" onclick="loadSection('orders')">
+                <h3>Orders</h3>
+                <p>Create and track customer orders.</p>
+            </div>
+
+            <div class="card" onclick="loadSection('reports')">
+                <h3>Reports</h3>
+                <p>View sales, profit and low-stock reports.</p>
+            </div>
+        </section>
+
+        <section class="content-box">
+            <h2 id="sectionTitle">Quick View</h2>
+            <div id="contentArea">
+                Select an option from the top menu.
+            </div>
+        </section>
+    </main>
+
+    <script src="/site/assets/app.js"></script>
+</body>
+</html>

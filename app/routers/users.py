@@ -39,10 +39,7 @@ def get_user(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
 
     return user
 
@@ -57,10 +54,7 @@ def update_user(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
 
     update_data = user_data.model_dump(exclude_unset=True)
 
@@ -100,10 +94,7 @@ def delete_user(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
 
     if user.id == current_user.id:
         raise HTTPException(
@@ -112,7 +103,6 @@ def delete_user(
         )
 
     user.is_active = False
-
     db.commit()
 
     return {"message": "User deactivated successfully"}
