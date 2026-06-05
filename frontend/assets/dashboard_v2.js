@@ -934,3 +934,434 @@ async function runLowStockReport() {
         document.getElementById("lowStockResult").innerHTML = `<p class="error-text">${error.message}</p>`;
     }
 }
+
+async function apiPut(url, body) {
+    const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${getToken()}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.detail || "Update failed");
+    }
+
+    return data;
+}
+
+async function apiDelete(url) {
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${getToken()}`
+        }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.detail || "Delete failed");
+    }
+
+    return data;
+}
+
+function renderCategoryTable(categories) {
+    if (!categories.length) {
+        return "<p>No category found.</p>";
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    categories.forEach(category => {
+        html += `
+            <tr>
+                <td>${category.id}</td>
+                <td>${category.name}</td>
+                <td>${category.description || ""}</td>
+                <td>
+                    <button class="small-btn" onclick="editCategory(${category.id}, '${category.name}', '${category.description || ""}')">Edit</button>
+                    <button class="small-btn danger" onclick="deleteCategory(${category.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table>";
+    return html;
+}
+
+async function refreshCategories() {
+    try {
+        const data = await apiGet("/categories/");
+        document.getElementById("categoryTable").innerHTML = renderCategoryTable(data);
+    } catch (error) {
+        document.getElementById("categoryTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function editCategory(id, oldName, oldDescription) {
+    const name = prompt("Enter new category name:", oldName);
+    if (!name) return;
+
+    const description = prompt("Enter new description:", oldDescription);
+
+    try {
+        await apiPut(`/categories/${id}`, {
+            name,
+            description
+        });
+
+        showMessage("Category updated successfully");
+        await refreshCategories();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+async function deleteCategory(id) {
+    const confirmDelete = confirm("Delete this category? Only delete if no product uses this category.");
+    if (!confirmDelete) return;
+
+    try {
+        await apiDelete(`/categories/${id}`);
+        showMessage("Category deleted successfully");
+        await refreshCategories();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+function renderProductTable(products) {
+    if (!products.length) {
+        return "<p>No product found.</p>";
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category ID</th>
+                    <th>Brand</th>
+                    <th>Description</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    products.forEach(product => {
+        html += `
+            <tr>
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>${product.category_id}</td>
+                <td>${product.brand || ""}</td>
+                <td>${product.description || ""}</td>
+                <td>${product.is_active}</td>
+                <td>
+                    <button class="small-btn" onclick="editProduct(${product.id}, '${product.name}', ${product.category_id}, '${product.brand || ""}', '${product.description || ""}')">Edit</button>
+                    <button class="small-btn danger" onclick="deleteProduct(${product.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table>";
+    return html;
+}
+
+async function refreshProducts() {
+    try {
+        const data = await apiGet("/products/");
+        document.getElementById("productTable").innerHTML = renderProductTable(data);
+    } catch (error) {
+        document.getElementById("productTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function searchProducts() {
+    const search = document.getElementById("productSearch").value;
+
+    try {
+        const data = await apiGet(`/products/?search=${encodeURIComponent(search)}`);
+        document.getElementById("productTable").innerHTML = renderProductTable(data);
+    } catch (error) {
+        document.getElementById("productTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function editProduct(id, oldName, oldCategoryId, oldBrand, oldDescription) {
+    const name = prompt("Enter product name:", oldName);
+    if (!name) return;
+
+    const categoryId = prompt("Enter category ID:", oldCategoryId);
+    if (!categoryId) return;
+
+    const brand = prompt("Enter brand:", oldBrand);
+    const description = prompt("Enter description:", oldDescription);
+
+    try {
+        await apiPut(`/products/${id}`, {
+            name,
+            category_id: Number(categoryId),
+            brand,
+            description
+        });
+
+        showMessage("Product updated successfully");
+        await refreshProducts();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+async function deleteProduct(id) {
+    const confirmDelete = confirm("Delete this product?");
+    if (!confirmDelete) return;
+
+    try {
+        await apiDelete(`/products/${id}`);
+        showMessage("Product deleted successfully");
+        await refreshProducts();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+function renderVariantTable(variants) {
+    if (!variants.length) {
+        return "<p>No variant found.</p>";
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product ID</th>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Buy Price</th>
+                    <th>Sell Price</th>
+                    <th>Stock</th>
+                    <th>SKU</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    variants.forEach(variant => {
+        html += `
+            <tr>
+                <td>${variant.id}</td>
+                <td>${variant.product_id}</td>
+                <td>${variant.size}</td>
+                <td>${variant.color}</td>
+                <td>${variant.buy_price}</td>
+                <td>${variant.sell_price}</td>
+                <td>${variant.stock_quantity}</td>
+                <td>${variant.sku}</td>
+                <td>${variant.is_active}</td>
+                <td>
+                    <button class="small-btn" onclick="editVariant(${variant.id}, ${variant.product_id}, '${variant.size}', '${variant.color}', ${variant.buy_price}, ${variant.sell_price}, ${variant.stock_quantity}, '${variant.sku}')">Edit</button>
+                    <button class="small-btn danger" onclick="deleteVariant(${variant.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table>";
+    return html;
+}
+
+async function refreshVariants() {
+    try {
+        const data = await apiGet("/variants/");
+        document.getElementById("variantTable").innerHTML = renderVariantTable(data);
+    } catch (error) {
+        document.getElementById("variantTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function editVariant(id, oldProductId, oldSize, oldColor, oldBuyPrice, oldSellPrice, oldStock, oldSku) {
+    const productId = prompt("Enter product ID:", oldProductId);
+    if (!productId) return;
+
+    const size = prompt("Enter size:", oldSize);
+    if (!size) return;
+
+    const color = prompt("Enter color:", oldColor);
+    if (!color) return;
+
+    const buyPrice = prompt("Enter buy price:", oldBuyPrice);
+    if (!buyPrice) return;
+
+    const sellPrice = prompt("Enter sell price:", oldSellPrice);
+    if (!sellPrice) return;
+
+    const stock = prompt("Enter stock quantity:", oldStock);
+    if (!stock) return;
+
+    const sku = prompt("Enter SKU:", oldSku);
+    if (!sku) return;
+
+    try {
+        await apiPut(`/variants/${id}`, {
+            product_id: Number(productId),
+            size,
+            color,
+            buy_price: Number(buyPrice),
+            sell_price: Number(sellPrice),
+            stock_quantity: Number(stock),
+            sku
+        });
+
+        showMessage("Variant updated successfully");
+        await refreshVariants();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+async function deleteVariant(id) {
+    const confirmDelete = confirm("Delete this variant?");
+    if (!confirmDelete) return;
+
+    try {
+        await apiDelete(`/variants/${id}`);
+        showMessage("Variant deleted successfully");
+        await refreshVariants();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+function renderCustomerTable(customers) {
+    if (!customers.length) {
+        return "<p>No customer found.</p>";
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    customers.forEach(customer => {
+        html += `
+            <tr>
+                <td>${customer.id}</td>
+                <td>${customer.name}</td>
+                <td>${customer.phone}</td>
+                <td>${customer.email || ""}</td>
+                <td>${customer.address || ""}</td>
+                <td>${customer.is_active}</td>
+                <td>
+                    <button class="small-btn" onclick="editCustomer(${customer.id}, '${customer.name}', '${customer.phone}', '${customer.email || ""}', '${customer.address || ""}')">Edit</button>
+                    <button class="small-btn danger" onclick="deleteCustomer(${customer.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table>";
+    return html;
+}
+
+async function refreshCustomers() {
+    try {
+        const data = await apiGet("/customers/");
+        document.getElementById("customerTable").innerHTML = renderCustomerTable(data);
+    } catch (error) {
+        document.getElementById("customerTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function searchCustomers() {
+    const search = document.getElementById("customerSearch").value;
+
+    try {
+        const data = await apiGet(`/customers/?search=${encodeURIComponent(search)}`);
+        document.getElementById("customerTable").innerHTML = renderCustomerTable(data);
+    } catch (error) {
+        document.getElementById("customerTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function editCustomer(id, oldName, oldPhone, oldEmail, oldAddress) {
+    const name = prompt("Enter customer name:", oldName);
+    if (!name) return;
+
+    const phone = prompt("Enter phone:", oldPhone);
+    if (!phone) return;
+
+    const email = prompt("Enter email:", oldEmail);
+    const address = prompt("Enter address:", oldAddress);
+
+    try {
+        await apiPut(`/customers/${id}`, {
+            name,
+            phone,
+            email: email || null,
+            address: address || null
+        });
+
+        showMessage("Customer updated successfully");
+        await refreshCustomers();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+async function deleteCustomer(id) {
+    const confirmDelete = confirm("Delete this customer?");
+    if (!confirmDelete) return;
+
+    try {
+        await apiDelete(`/customers/${id}`);
+        showMessage("Customer deleted successfully");
+        await refreshCustomers();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}

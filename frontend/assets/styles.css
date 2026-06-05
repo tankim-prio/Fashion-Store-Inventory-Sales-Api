@@ -249,3 +249,25 @@ select {
     background: #f9fafb;
     border-radius: 8px;
 }
+
+.small-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 7px 10px;
+    border-radius: 6px;
+    margin-right: 5px;
+    font-size: 13px;
+}
+
+.small-btn:hover {
+    background: #1d4ed8;
+}
+
+.small-btn.danger {
+    background: #dc2626;
+}
+
+.small-btn.danger:hover {
+    background: #b91c1c;
+}
