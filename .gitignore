@@ -3,3 +3,9 @@ venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Testing
+.pytest_cache/
+test_fashion_store.db
+__pycache__/
+*.pyc
