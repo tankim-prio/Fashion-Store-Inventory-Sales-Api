@@ -1766,3 +1766,400 @@ async function saveProfile() {
         showProfileMessage(error.message, "error");
     }
 }
+
+
+
+
+
+
+
+
+
+/* AI Business Assistant */
+
+function escapeHtml(text) {
+    return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function prettifyKey(key) {
+    return String(key)
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function getAiTime() {
+    const now = new Date();
+    return now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function renderAiData(data) {
+    if (!data) return "";
+
+    if (data.type === "metrics") {
+        let html = `<div class="ai-result-box">`;
+
+        if (data.title) {
+            html += `<div class="ai-result-title">${escapeHtml(data.title)}</div>`;
+        }
+
+        html += `<div class="ai-metrics-grid">`;
+
+        Object.entries(data.metrics || {}).forEach(([key, value]) => {
+            html += `
+                <div class="ai-metric-card">
+                    <span>${escapeHtml(prettifyKey(key))}</span>
+                    <strong>${escapeHtml(value)}</strong>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
+        return html;
+    }
+
+    if (data.type === "table") {
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const totals = data.totals || {};
+
+        let html = `<div class="ai-result-box">`;
+
+        if (data.title) {
+            html += `<div class="ai-result-title">${escapeHtml(data.title)}</div>`;
+        }
+
+        if (Object.keys(totals).length > 0) {
+            html += `<div class="ai-metrics-grid ai-small-metrics">`;
+
+            Object.entries(totals).forEach(([key, value]) => {
+                html += `
+                    <div class="ai-metric-card">
+                        <span>${escapeHtml(prettifyKey(key))}</span>
+                        <strong>${escapeHtml(value)}</strong>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+        }
+
+        if (rows.length === 0) {
+            html += `<p class="ai-empty">No matching data found.</p></div>`;
+            return html;
+        }
+
+        html += `<div class="ai-table-wrapper"><table class="ai-smart-table"><thead><tr>`;
+
+        columns.forEach(column => {
+            html += `<th>${escapeHtml(prettifyKey(column))}</th>`;
+        });
+
+        html += `</tr></thead><tbody>`;
+
+        rows.forEach(row => {
+            html += `<tr>`;
+
+            columns.forEach(column => {
+                html += `<td>${escapeHtml(row[column] ?? "")}</td>`;
+            });
+
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table></div></div>`;
+        return html;
+    }
+
+    if (typeof data === "object") {
+        return `<pre class="ai-json">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+    }
+
+    return "";
+}
+
+function loadAiAssistantPage() {
+    closeMobileMenu();
+
+    setPage("AI Assistant", "Ask business questions using your store database and free local Ollama AI.");
+
+    setContent(`
+        <div class="ai-page">
+
+            <div class="ai-main-card">
+                <div id="aiChatMessages" class="ai-chat-messages">
+                    <div class="ai-message ai-message-bot">
+                        <div class="ai-avatar bot">AI</div>
+
+                        <div class="ai-bubble">
+                            <div class="ai-message-top">
+                                <strong>AI Assistant</strong>
+                                <small>${getAiTime()}</small>
+                            </div>
+
+                            <p>
+                                Hello! Ask me anything about your store data.
+                                Example: <b>paid customers name and phone</b>,
+                                <b>today sales</b>, <b>total profit</b>,
+                                <b>due customers</b>, or <b>which products need restock?</b>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="aiChatForm" class="ai-chat-form">
+                    <input id="aiQuestion" type="text" placeholder="Ask anything about your store data..." required>
+
+                    <button id="aiAskButton" type="submit">
+                        Ask
+                    </button>
+                </form>
+            </div>
+
+            <aside class="ai-side-panel">
+                <div class="ai-side-card">
+                    <div class="ai-side-header">
+                        <h3>Quick Questions</h3>
+                        <button onclick="clearAiChat()">Clear Chat</button>
+                    </div>
+
+                    <div class="ai-question-group">
+                        <h4>Business Summary</h4>
+                        <button onclick="askAiSuggestion('business summary')">Overall shop summary</button>
+                        <button onclick="askAiSuggestion('how is my shop doing today?')">How is my shop doing?</button>
+                    </div>
+
+                    <div class="ai-question-group">
+                        <h4>Customers & Payments</h4>
+                        <button onclick="askAiSuggestion('who bought products and paid?')">Who bought and paid?</button>
+                        <button onclick="askAiSuggestion('paid customers name and phone')">Paid customers name & phone</button>
+                        <button onclick="askAiSuggestion('who still needs to pay?')">Who still needs to pay?</button>
+                        <button onclick="askAiSuggestion('show recent payments')">Recent payments</button>
+                    </div>
+
+                    <div class="ai-question-group">
+                        <h4>Sales & Profit</h4>
+                        <button onclick="askAiSuggestion('today sales')">Today sales</button>
+                        <button onclick="askAiSuggestion('total profit')">Total profit</button>
+                        <button onclick="askAiSuggestion('top selling products')">Top selling products</button>
+                    </div>
+
+                    <div class="ai-question-group">
+                        <h4>Stock & Products</h4>
+                        <button onclick="askAiSuggestion('which products need restock?')">Products need restock</button>
+                        <button onclick="askAiSuggestion('total stock value')">Total stock value</button>
+                        <button onclick="askAiSuggestion('show recent products')">Recent products</button>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    `);
+
+    document.getElementById("aiChatForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const input = document.getElementById("aiQuestion");
+        const question = input.value.trim();
+
+        if (!question) return;
+
+        input.value = "";
+        await sendAiQuestion(question);
+    });
+}
+
+function clearAiChat() {
+    const container = document.getElementById("aiChatMessages");
+
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="ai-message ai-message-bot">
+            <div class="ai-avatar bot">AI</div>
+
+            <div class="ai-bubble">
+                <div class="ai-message-top">
+                    <strong>AI Assistant</strong>
+                    <small>${getAiTime()}</small>
+                </div>
+
+                <p>Chat cleared. Ask me anything about your store data.</p>
+            </div>
+        </div>
+    `;
+}
+
+function addAiMessage(type, text, data = null, temporary = false) {
+    const container = document.getElementById("aiChatMessages");
+
+    if (!container) return null;
+
+    const isUser = type === "user";
+    const label = isUser ? "You" : "AI Assistant";
+    const className = isUser ? "ai-message-user" : "ai-message-bot";
+    const avatarText = isUser ? "YOU" : "AI";
+    const avatarClass = isUser ? "user" : "bot";
+
+    const message = document.createElement("div");
+    message.className = `ai-message ${className}`;
+
+    if (temporary) {
+        message.classList.add("ai-temp-message");
+    }
+
+    let messageText = escapeHtml(text);
+
+    if (temporary) {
+        messageText = `
+            <span class="ai-loader"></span>
+            ${messageText}
+        `;
+    }
+
+    message.innerHTML = `
+        <div class="ai-avatar ${avatarClass}">${avatarText}</div>
+
+        <div class="ai-bubble">
+            <div class="ai-message-top">
+                <strong>${label}</strong>
+                <small>${getAiTime()}</small>
+            </div>
+
+            <p>${messageText}</p>
+            ${renderAiData(data)}
+        </div>
+    `;
+
+    container.appendChild(message);
+    container.scrollTop = container.scrollHeight;
+
+    return message;
+}
+
+async function sendAiQuestion(question) {
+    const askButton = document.getElementById("aiAskButton");
+
+    addAiMessage("user", question);
+
+    if (askButton) {
+        askButton.disabled = true;
+        askButton.innerText = "Thinking...";
+    }
+
+    const thinkingMessage = addAiMessage("bot", "Checking your store data...", null, true);
+
+    try {
+        const response = await apiPost("/ai/chat", {
+            question: question
+        });
+
+        if (thinkingMessage) {
+            thinkingMessage.remove();
+        }
+
+        addAiMessage("bot", response.answer, response.data);
+
+    } catch (error) {
+        if (thinkingMessage) {
+            thinkingMessage.remove();
+        }
+
+        addAiMessage("bot", error.message);
+    } finally {
+        if (askButton) {
+            askButton.disabled = false;
+            askButton.innerText = "Ask";
+        }
+    }
+}
+
+async function askAiSuggestion(question) {
+    await sendAiQuestion(question);
+}
+
+/* Final Auth Token Expiry Handler */
+
+function handleExpiredSession() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_role");
+
+    alert("Your session expired. Please login again.");
+    window.location.href = "/site/login.html";
+}
+
+async function apiRequest(url, options = {}) {
+    const token = getToken();
+
+    if (!token) {
+        handleExpiredSession();
+        throw new Error("No login token found");
+    }
+
+    const headers = {
+        ...(options.headers || {}),
+        "Authorization": `Bearer ${token}`
+    };
+
+    if (options.body && !headers["Content-Type"]) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: headers
+    });
+
+    let data = null;
+
+    try {
+        data = await response.json();
+    } catch {}
+
+    if (response.status === 401) {
+        handleExpiredSession();
+        throw new Error("Invalid or expired token");
+    }
+
+    if (response.status === 403) {
+        throw new Error(formatApiError(data) || "Access forbidden");
+    }
+
+    if (!response.ok) {
+        throw new Error(formatApiError(data));
+    }
+
+    return data;
+}
+
+async function apiGet(url) {
+    return apiRequest(url);
+}
+
+async function apiPost(url, body) {
+    return apiRequest(url, {
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+}
+
+async function apiPut(url, body) {
+    return apiRequest(url, {
+        method: "PUT",
+        body: JSON.stringify(body)
+    });
+}
+
+async function apiDelete(url) {
+    return apiRequest(url, {
+        method: "DELETE"
+    });
+}

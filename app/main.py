@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+﻿from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,6 +20,7 @@ from app.models import (
 )
 
 from app.routers import (
+    ai_assistant,
     auth,
     categories,
     customers,
@@ -37,8 +38,8 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Fashion Store Inventory API",
-    description="Secure backend API for fashion store inventory, sales, orders, payments and reports.",
-    version="1.2.0"
+    description="Secure backend API for fashion store inventory, sales, orders, payments, reports and AI assistant.",
+    version="1.3.0"
 )
 
 
@@ -114,13 +115,10 @@ app.add_middleware(
 staff_or_admin = [Depends(require_staff_or_admin)]
 admin_only = [Depends(require_admin)]
 
-# Public routes
 app.include_router(auth.router)
 
-# Admin-only routes
 app.include_router(users.router, dependencies=admin_only)
 
-# Logged-in staff/admin routes
 app.include_router(categories.router, dependencies=staff_or_admin)
 app.include_router(products.router, dependencies=staff_or_admin)
 app.include_router(product_variants.router, dependencies=staff_or_admin)
@@ -130,8 +128,8 @@ app.include_router(orders.router, dependencies=staff_or_admin)
 app.include_router(payments.router, dependencies=staff_or_admin)
 app.include_router(invoices.router, dependencies=staff_or_admin)
 app.include_router(reports.router, dependencies=staff_or_admin)
+app.include_router(ai_assistant.router, dependencies=staff_or_admin)
 
-# Frontend
 app.mount("/site", StaticFiles(directory="frontend", html=True), name="site")
 
 
