@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate
 from app.dependencies.auth_dependency import require_admin
 from app.services.auth_service import (
     create_user_by_admin,
@@ -14,24 +14,37 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.post("/", response_model=UserResponse)
+def serialize_user(user: User):
+    return {
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role,
+        "is_active": user.is_active,
+        "created_at": str(user.created_at) if getattr(user, "created_at", None) else None
+    }
+
+
+@router.post("/")
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return create_user_by_admin(db=db, user_data=user)
+    new_user = create_user_by_admin(db=db, user_data=user)
+    return serialize_user(new_user)
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("/")
 def get_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(User).order_by(User.id.desc()).all()
+    users = db.query(User).order_by(User.id.desc()).all()
+    return [serialize_user(user) for user in users]
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}")
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
@@ -40,20 +53,20 @@ def get_user(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="User not found")
 
-    return user
+    return serialize_user(user)
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}")
 def update_user(
     user_id: int,
     user: UserUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return update_user_by_admin(db=db, user_id=user_id, user_data=user)
+    updated_user = update_user_by_admin(db=db, user_id=user_id, user_data=user)
+    return serialize_user(updated_user)
 
 
 @router.delete("/{user_id}")
@@ -63,7 +76,6 @@ def delete_user(
     current_user: User = Depends(require_admin)
 ):
     if current_user.id == user_id:
-        from fastapi import HTTPException
         raise HTTPException(
             status_code=400,
             detail="You cannot deactivate your own account"
