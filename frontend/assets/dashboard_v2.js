@@ -1600,3 +1600,173 @@ async function refreshLowStockFromStockPage() {
         document.getElementById("lowStockTable").innerHTML = `<p class="error-text">${error.message}</p>`;
     }
 }
+
+let userCache = [];
+
+async function loadUsersPage() {
+    setPage("User Management", "Create admin/staff users, edit users and deactivate accounts.");
+
+    setContent(`
+        <div class="content-box">
+            <h2>Create User</h2>
+            <div id="messageBox" class="message"></div>
+
+            <form id="userForm" class="form-grid">
+                <input id="userFullName" type="text" placeholder="Full name" required>
+                <input id="userEmail" type="email" placeholder="Email" required>
+                <input id="userPassword" type="password" placeholder="Password" required>
+
+                <select id="userRole" required>
+                    <option value="">Select role</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                </select>
+
+                <button type="submit">Create User</button>
+            </form>
+        </div>
+
+        <div class="content-box">
+            <h2>User List</h2>
+            <button class="small-btn" onclick="refreshUsers()">Refresh Users</button>
+            <div id="userTable">Loading...</div>
+        </div>
+    `);
+
+    document.getElementById("userForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        try {
+            await apiPost("/users/", {
+                full_name: document.getElementById("userFullName").value,
+                email: document.getElementById("userEmail").value,
+                password: document.getElementById("userPassword").value,
+                role: document.getElementById("userRole").value
+            });
+
+            showMessage("User created successfully");
+
+            document.getElementById("userFullName").value = "";
+            document.getElementById("userEmail").value = "";
+            document.getElementById("userPassword").value = "";
+            document.getElementById("userRole").value = "";
+
+            await refreshUsers();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    });
+
+    await refreshUsers();
+}
+
+function renderUserTable(users) {
+    userCache = users;
+
+    if (!users.length) {
+        return "<p>No user found.</p>";
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Active</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    users.forEach(user => {
+        html += `
+            <tr>
+                <td>${user.id}</td>
+                <td>${user.full_name}</td>
+                <td>${user.email}</td>
+                <td><strong>${user.role}</strong></td>
+                <td>${user.is_active}</td>
+                <td>${user.created_at || ""}</td>
+                <td>
+                    <button class="small-btn" onclick="editUser(${user.id})">Edit</button>
+                    <button class="small-btn danger" onclick="deleteUser(${user.id})">Deactivate</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table>";
+    return html;
+}
+
+async function refreshUsers() {
+    try {
+        const data = await apiGet("/users/");
+        document.getElementById("userTable").innerHTML = renderUserTable(data);
+    } catch (error) {
+        document.getElementById("userTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function editUser(id) {
+    const user = userCache.find(item => item.id === id);
+
+    if (!user) {
+        showMessage("User not found in table", "error");
+        return;
+    }
+
+    const fullName = prompt("Enter full name:", user.full_name);
+    if (!fullName) return;
+
+    const email = prompt("Enter email:", user.email);
+    if (!email) return;
+
+    const role = prompt("Enter role: admin or staff", user.role);
+    if (!role) return;
+
+    if (!["admin", "staff"].includes(role)) {
+        showMessage("Role must be admin or staff", "error");
+        return;
+    }
+
+    const activeInput = prompt("Is user active? true or false", String(user.is_active));
+    if (!activeInput) return;
+
+    const isActive = activeInput.toLowerCase() === "true";
+
+    try {
+        await apiPut(`/users/${id}`, {
+            full_name: fullName,
+            email: email,
+            role: role,
+            is_active: isActive
+        });
+
+        showMessage("User updated successfully");
+        await refreshUsers();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+async function deleteUser(id) {
+    const confirmDelete = confirm("Deactivate this user? The user will not be able to login.");
+    if (!confirmDelete) return;
+
+    try {
+        await apiDelete(`/users/${id}`);
+        showMessage("User deactivated successfully");
+        await refreshUsers();
+
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
