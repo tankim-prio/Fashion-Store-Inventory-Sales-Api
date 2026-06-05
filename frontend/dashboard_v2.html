@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard V2 - Fashion Store API</title>
-    <link rel="stylesheet" href="/site/assets/styles.css?v=1000">
+    <link rel="stylesheet" href="/site/assets/styles.css?v=2000">
 </head>
 <body>
 
@@ -19,8 +19,8 @@
         <button onclick="loadCustomersPage()">Customers</button>
         <button onclick="loadOrdersPage()">Orders</button>
         <button onclick="loadPaymentsPage()">Payments</button>
-        <button onclick="loadQuick('/invoices/', 'Invoices')">Invoices</button>
-        <button onclick="loadQuick('/reports/profit', 'Reports')">Reports</button>
+        <button onclick="loadInvoicesPage()">Invoices</button>
+        <button onclick="loadReportsPage()">Reports</button>
         <button onclick="loadQuick('/users/', 'Users')">Users</button>
     </div>
 
@@ -69,19 +69,19 @@
                 <p>Receive order payments.</p>
             </div>
 
-            <div class="card" onclick="loadQuick('/invoices/', 'Invoices')">
+            <div class="card" onclick="loadInvoicesPage()">
                 <h3>Invoices</h3>
-                <p>View invoices.</p>
+                <p>Generate and view invoices.</p>
             </div>
 
-            <div class="card" onclick="loadQuick('/reports/profit', 'Reports')">
+            <div class="card" onclick="loadReportsPage()">
                 <h3>Reports</h3>
-                <p>View reports.</p>
+                <p>View sales, profit and stock reports.</p>
             </div>
         </div>
     </section>
 </main>
 
-<script src="/site/assets/dashboard_v2.js?v=1000"></script>
+<script src="/site/assets/dashboard_v2.js?v=2000"></script>
 </body>
 </html>

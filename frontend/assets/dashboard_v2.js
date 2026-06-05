@@ -663,3 +663,274 @@ async function refreshPayments() {
         document.getElementById("paymentTable").innerHTML = `<p class="error-text">${error.message}</p>`;
     }
 }
+
+async function loadInvoicesPage() {
+    setPage("Invoices", "Generate invoice from order and view invoice details.");
+
+    setContent(`
+        <div class="content-box">
+            <h2>Generate Invoice</h2>
+            <div id="messageBox" class="message"></div>
+
+            <form id="invoiceForm" class="form-grid">
+                <select id="invoiceOrder" required>
+                    <option value="">Select order</option>
+                </select>
+
+                <button type="submit">Generate Invoice</button>
+            </form>
+        </div>
+
+        <div class="content-box">
+            <h2>Invoice Details</h2>
+            <div id="invoiceDetails">Select an order and generate invoice.</div>
+        </div>
+
+        <div class="content-box">
+            <h2>Invoice List</h2>
+            <div id="invoiceTable">Loading...</div>
+        </div>
+    `);
+
+    await loadInvoiceOrderDropdown();
+
+    document.getElementById("invoiceForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const orderId = document.getElementById("invoiceOrder").value;
+
+        try {
+            const invoice = await apiGet(`/orders/${orderId}/invoice`);
+
+            showMessage("Invoice generated successfully");
+            document.getElementById("invoiceDetails").innerHTML = renderInvoice(invoice);
+
+            await refreshInvoices();
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    });
+
+    await refreshInvoices();
+}
+
+async function loadInvoiceOrderDropdown() {
+    const select = document.getElementById("invoiceOrder");
+    const orders = await apiGet("/orders/");
+
+    orders.forEach(order => {
+        const option = document.createElement("option");
+        option.value = order.id;
+        option.innerText = `${order.id} - ${order.order_number} | Final: ${order.final_amount} | Status: ${order.status}`;
+        select.appendChild(option);
+    });
+}
+
+async function refreshInvoices() {
+    try {
+        const data = await apiGet("/invoices/");
+        document.getElementById("invoiceTable").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("invoiceTable").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+function renderInvoice(invoice) {
+    let itemsHtml = "";
+
+    invoice.items.forEach(item => {
+        itemsHtml += `
+            <tr>
+                <td>${item.product_name}</td>
+                <td>${item.size}</td>
+                <td>${item.color}</td>
+                <td>${item.sku}</td>
+                <td>${item.quantity}</td>
+                <td>${item.unit_price}</td>
+                <td>${item.total_price}</td>
+            </tr>
+        `;
+    });
+
+    return `
+        <div class="invoice-box">
+            <h2>Invoice: ${invoice.invoice_number}</h2>
+
+            <p><strong>Order:</strong> ${invoice.order_number}</p>
+            <p><strong>Order Status:</strong> ${invoice.order_status}</p>
+
+            <p><strong>Customer:</strong> ${invoice.customer_name}</p>
+            <p><strong>Phone:</strong> ${invoice.customer_phone}</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>SKU</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+
+            <div class="invoice-summary">
+                <p><strong>Total Amount:</strong> ${invoice.total_amount}</p>
+                <p><strong>Discount:</strong> ${invoice.discount}</p>
+                <p><strong>Final Amount:</strong> ${invoice.final_amount}</p>
+                <p><strong>Paid Amount:</strong> ${invoice.paid_amount}</p>
+                <p><strong>Due Amount:</strong> ${invoice.due_amount}</p>
+                <p><strong>Payment Status:</strong> ${invoice.payment_status}</p>
+            </div>
+        </div>
+    `;
+}
+
+async function loadReportsPage() {
+    setPage("Reports", "View sales, profit, top products and low-stock reports.");
+
+    setContent(`
+        <div class="cards">
+            <div class="card" onclick="loadDailySalesReport()">
+                <h3>Daily Sales</h3>
+                <p>View today's or selected date sales.</p>
+            </div>
+
+            <div class="card" onclick="loadMonthlySalesReport()">
+                <h3>Monthly Sales</h3>
+                <p>View monthly business summary.</p>
+            </div>
+
+            <div class="card" onclick="loadTopProductsReport()">
+                <h3>Top Products</h3>
+                <p>View best-selling products.</p>
+            </div>
+
+            <div class="card" onclick="loadProfitReport()">
+                <h3>Profit</h3>
+                <p>View total sales, cost and profit.</p>
+            </div>
+
+            <div class="card" onclick="loadLowStockReport()">
+                <h3>Low Stock</h3>
+                <p>View products with low stock.</p>
+            </div>
+        </div>
+
+        <div class="content-box">
+            <h2>Report Output</h2>
+            <div id="reportOutput">Select a report.</div>
+        </div>
+    `);
+}
+
+async function loadDailySalesReport() {
+    const today = new Date().toISOString().split("T")[0];
+
+    document.getElementById("reportOutput").innerHTML = `
+        <div class="form-grid">
+            <input id="dailyReportDate" type="date" value="${today}">
+            <button onclick="runDailySalesReport()">Run Daily Report</button>
+        </div>
+
+        <div id="dailyReportResult">Choose date and run report.</div>
+    `;
+}
+
+async function runDailySalesReport() {
+    const reportDate = document.getElementById("dailyReportDate").value;
+
+    try {
+        const data = await apiGet(`/reports/daily-sales?report_date=${reportDate}`);
+        document.getElementById("dailyReportResult").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("dailyReportResult").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadMonthlySalesReport() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    document.getElementById("reportOutput").innerHTML = `
+        <div class="form-grid">
+            <input id="monthlyReportYear" type="number" value="${year}" placeholder="Year">
+            <input id="monthlyReportMonth" type="number" value="${month}" placeholder="Month">
+            <button onclick="runMonthlySalesReport()">Run Monthly Report</button>
+        </div>
+
+        <div id="monthlyReportResult">Choose year/month and run report.</div>
+    `;
+}
+
+async function runMonthlySalesReport() {
+    const year = document.getElementById("monthlyReportYear").value;
+    const month = document.getElementById("monthlyReportMonth").value;
+
+    try {
+        const data = await apiGet(`/reports/monthly-sales?year=${year}&month=${month}`);
+        document.getElementById("monthlyReportResult").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("monthlyReportResult").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadTopProductsReport() {
+    document.getElementById("reportOutput").innerHTML = `
+        <div class="form-grid">
+            <input id="topProductLimit" type="number" value="5" placeholder="Limit">
+            <button onclick="runTopProductsReport()">Run Top Products Report</button>
+        </div>
+
+        <div id="topProductsResult">Choose limit and run report.</div>
+    `;
+}
+
+async function runTopProductsReport() {
+    const limit = document.getElementById("topProductLimit").value;
+
+    try {
+        const data = await apiGet(`/reports/top-products?limit=${limit}`);
+        document.getElementById("topProductsResult").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("topProductsResult").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadProfitReport() {
+    try {
+        const data = await apiGet("/reports/profit");
+        document.getElementById("reportOutput").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("reportOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadLowStockReport() {
+    document.getElementById("reportOutput").innerHTML = `
+        <div class="form-grid">
+            <input id="lowStockThreshold" type="number" value="5" placeholder="Threshold">
+            <button onclick="runLowStockReport()">Run Low Stock Report</button>
+        </div>
+
+        <div id="lowStockResult">Choose threshold and run report.</div>
+    `;
+}
+
+async function runLowStockReport() {
+    const threshold = document.getElementById("lowStockThreshold").value;
+
+    try {
+        const data = await apiGet(`/reports/low-stock?threshold=${threshold}`);
+        document.getElementById("lowStockResult").innerHTML = renderTable(data);
+    } catch (error) {
+        document.getElementById("lowStockResult").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
