@@ -1,8 +1,8 @@
 ﻿services:
   db:
     image: postgres:16
-    container_name: fashion_store_db
-    restart: always
+    container_name: fashion_store_postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: fashion_store_db
       POSTGRES_USER: postgres
@@ -10,17 +10,17 @@
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - fashion_store_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d fashion_store_db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
 
   api:
     build: .
     container_name: fashion_store_api
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env.docker
     ports:
@@ -28,6 +28,8 @@
     depends_on:
       db:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
-  postgres_data:
+  fashion_store_postgres_data:
