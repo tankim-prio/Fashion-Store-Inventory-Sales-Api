@@ -1,3 +1,5 @@
+[![Backend CI](https://github.com/tankim-prio/fashion-store-inventory-sales-api/actions/workflows/ci.yml/badge.svg)](https://github.com/tankim-prio/fashion-store-inventory-sales-api/actions/workflows/ci.yml)
+
 ﻿# Fashion Store Inventory & Sales Management API
 
 A complete **FastAPI backend portfolio project** for managing fashion store inventory, sales, customers, orders, payments, invoices, reports, AI Assistant, and Predictive Analytics.
@@ -498,6 +500,48 @@ The AI Assistant can work locally without paid API usage.
 
 ---
 
+
+---
+
+## Docker Support
+
+This project supports Docker-based local development.
+
+Docker setup includes:
+
+- FastAPI backend container
+- PostgreSQL database container
+- Docker Compose configuration
+- Docker environment example file
+- Docker guide documentation
+
+Run with Docker:
+
+```bash
+docker compose up --build
+```
+
+Seed Docker database:
+
+```bash
+docker compose exec api python seed_demo_data.py
+```
+
+Run tests inside Docker:
+
+```bash
+docker compose exec api python -m pytest -v
+```
+
+Docker URLs:
+
+```text
+Swagger Docs: http://127.0.0.1:8000/docs
+Login Page: http://127.0.0.1:8000/site/login.html
+Dashboard: http://127.0.0.1:8000/site/dashboard_v2.html
+```
+
+
 ## Automated Testing
 
 Run all tests:
@@ -525,6 +569,30 @@ Test coverage includes:
 - Predictive Analytics
 
 ---
+
+
+---
+
+## GitHub Actions CI/CD
+
+This project includes a GitHub Actions workflow for automated quality checking.
+
+The CI workflow runs on every push and pull request to the main branch.
+
+It checks:
+
+- Python dependency installation
+- PostgreSQL service setup
+- Demo data seeding
+- Automated backend tests
+- Docker image build
+
+Current test result:
+
+```text
+29 passed
+```
+
 
 ## API Modules
 
@@ -555,6 +623,7 @@ Additional documentation:
 - [Portfolio Summary](docs/PORTFOLIO_SUMMARY.md)
 - [Demo Guide](docs/DEMO_GUIDE.md)
 - [Screenshot Checklist](docs/SCREENSHOT_CHECKLIST.md)
+- [Docker Guide](docs/DOCKER_GUIDE.md)
 
 ---
 
