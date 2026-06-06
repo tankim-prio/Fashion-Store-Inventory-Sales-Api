@@ -15,14 +15,6 @@ from app.models.order import Order, OrderItem
 from app.models.payment import Payment
 from app.models.product import Product
 from app.models.product_variant import ProductVariant
-from app.services.ml_service import (
-    customer_segments,
-    low_stock_prediction,
-    ml_summary,
-    product_recommendations,
-    reorder_recommendations,
-    sales_forecast,
-)
 
 load_dotenv()
 
@@ -50,12 +42,6 @@ INTENTS = [
     "recent_payments",
     "recent_products",
     "business_calculation",
-    "analytics_summary",
-    "analytics_sales_forecast",
-    "analytics_stock_risk",
-    "analytics_restock_plan",
-    "analytics_customer_insights",
-    "analytics_product_recommendations",
     "general_business_question",
     "help",
     "unknown",
@@ -139,12 +125,6 @@ def suggestions():
         "top selling products",
         "If 22 t-shirts cost 450 each, what is total cost?",
         "find customer 01711111111",
-        "show analytics overview",
-        "forecast next 7 days sales",
-        "which products should I restock?",
-        "show customer insights",
-        "who are my VIP customers?",
-        "recommend products for customer 1",
     ]
 
 
@@ -238,27 +218,6 @@ def quick_detect_intent(question: str):
     if "find customer" in q or "search customer" in q:
         return intent_result("find_customer", 0.95, threshold, sku, customer_keyword, "fast_rules")
 
-    if contains_any(q, ["analytics overview", "predictive analytics", "business intelligence", "analytics summary"]):
-        return intent_result("analytics_summary", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if "forecast" in q and contains_any(q, ["sale", "sales", "revenue", "income"]):
-        return intent_result("analytics_sales_forecast", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if contains_any(q, ["predict sales", "sales prediction", "next 7 days sales", "next seven days sales"]):
-        return intent_result("analytics_sales_forecast", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if contains_any(q, ["stock risk", "risky product", "risky products", "may run out", "run out soon", "stock danger"]):
-        return intent_result("analytics_stock_risk", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if contains_any(q, ["restock plan", "reorder plan", "buy again", "restock", "reorder", "should i buy", "should i restock"]):
-        return intent_result("analytics_restock_plan", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if contains_any(q, ["customer insight", "customer insights", "customer segment", "customer segments", "vip customer", "vip customers", "loyal customer", "at risk customer"]):
-        return intent_result("analytics_customer_insights", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
-    if contains_any(q, ["recommend product", "recommend products", "product recommendation", "product recommendations", "suggest product", "suggest products"]):
-        return intent_result("analytics_product_recommendations", 0.98, threshold, sku, customer_keyword, "fast_rules")
-
     if "payment" in q or "payments" in q:
         return intent_result("recent_payments", 0.85, threshold, sku, customer_keyword, "fast_rules")
 
@@ -296,9 +255,7 @@ Allowed intents:
 business_summary, paid_customers, due_customers, pending_orders, paid_orders,
 today_sales, total_profit, top_products, low_stock, total_stock, stock_search,
 recent_customers, find_customer, recent_orders, recent_payments, recent_products,
-business_calculation, analytics_summary, analytics_sales_forecast,
-analytics_stock_risk, analytics_restock_plan, analytics_customer_insights,
-analytics_product_recommendations, general_business_question, help, unknown.
+business_calculation, general_business_question, help, unknown.
 
 Mappings:
 - who bought products and paid = paid_customers
@@ -313,12 +270,6 @@ Mappings:
 - overall shop report = business_summary
 - any calculation using pieces, price, cost, discount, profit, total amount = business_calculation
 - general fashion store advice or explanation = general_business_question
-- analytics overview, predictive analytics summary, business intelligence = analytics_summary
-- forecast sales, predict sales, next 7 days sales = analytics_sales_forecast
-- stock risk, risky products, products may run out = analytics_stock_risk
-- restock plan, reorder plan, what should I buy again, products should I restock = analytics_restock_plan
-- customer insights, customer segments, VIP customers, loyal customers, at risk customers = analytics_customer_insights
-- product recommendations, recommend products, recommend products for customer = analytics_product_recommendations
 
 JSON shape:
 {{
@@ -1228,131 +1179,6 @@ def answer_general_or_calculation(db: Session, question: str):
         }
 
 
-
-def analytics_result_to_ai_response(result):
-    title = result.get("title", "Analytics Result")
-    summary = result.get("summary", "")
-    payload = result.get("data") or {}
-
-    metrics = payload.get("metrics") or {}
-    rows = payload.get("rows")
-    modules = payload.get("modules")
-
-    if rows and isinstance(rows, list):
-        columns = list(rows[0].keys()) if rows else []
-
-        return {
-            "answer": summary,
-            "data": table_data(
-                title,
-                columns,
-                rows,
-                metrics,
-            ),
-            "suggestions": suggestions(),
-        }
-
-    if modules and isinstance(modules, list):
-        module_text = ", ".join(modules)
-        metrics = {
-            **metrics,
-            "available_modules": module_text,
-        }
-
-    return {
-        "answer": summary,
-        "data": metric_data(title, metrics),
-        "suggestions": suggestions(),
-    }
-
-
-def extract_customer_id_from_question(question: str):
-    q = normalize_text(question)
-
-    patterns = [
-        r"customer\s+id\s+(\d+)",
-        r"customer\s+(\d+)",
-        r"for\s+customer\s+(\d+)",
-        r"customer_id\s+(\d+)",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, q)
-
-        if match:
-            return int(match.group(1))
-
-    return None
-
-
-def answer_analytics_summary(db: Session):
-    return analytics_result_to_ai_response(ml_summary(db))
-
-
-def answer_analytics_sales_forecast(db: Session, question: str):
-    q = normalize_text(question)
-
-    days = 7
-    lookback_days = 30
-
-    day_match = re.search(r"next\s+(\d+)\s+day", q)
-
-    if day_match:
-        days = int(day_match.group(1))
-    else:
-        any_number = extract_number(q)
-
-        if any_number and "forecast" in q:
-            days = any_number
-
-    days = max(1, min(days, 30))
-
-    result = sales_forecast(
-        db=db,
-        forecast_days=days,
-        lookback_days=lookback_days,
-    )
-
-    return analytics_result_to_ai_response(result)
-
-
-def answer_analytics_stock_risk(db: Session):
-    return analytics_result_to_ai_response(
-        low_stock_prediction(
-            db=db,
-            lookback_days=30,
-        )
-    )
-
-
-def answer_analytics_restock_plan(db: Session):
-    return analytics_result_to_ai_response(
-        reorder_recommendations(
-            db=db,
-            lookback_days=30,
-            lead_time_days=7,
-            safety_days=5,
-        )
-    )
-
-
-def answer_analytics_customer_insights(db: Session):
-    return analytics_result_to_ai_response(customer_segments(db))
-
-
-def answer_analytics_product_recommendations(db: Session, question: str):
-    customer_id = extract_customer_id_from_question(question)
-
-    result = product_recommendations(
-        db=db,
-        customer_id=customer_id,
-        limit=10,
-    )
-
-    return analytics_result_to_ai_response(result)
-
-
-
 def answer_ai_question(db: Session, question: str):
     detected = detect_intent(question)
     intent = detected.get("intent", "unknown")
@@ -1391,18 +1217,6 @@ def answer_ai_question(db: Session, question: str):
         response = answer_recent_payments(db)
     elif intent == "recent_products":
         response = answer_recent_products(db)
-    elif intent == "analytics_summary":
-        response = answer_analytics_summary(db)
-    elif intent == "analytics_sales_forecast":
-        response = answer_analytics_sales_forecast(db, question)
-    elif intent == "analytics_stock_risk":
-        response = answer_analytics_stock_risk(db)
-    elif intent == "analytics_restock_plan":
-        response = answer_analytics_restock_plan(db)
-    elif intent == "analytics_customer_insights":
-        response = answer_analytics_customer_insights(db)
-    elif intent == "analytics_product_recommendations":
-        response = answer_analytics_product_recommendations(db, question)
     elif intent in ["business_calculation", "general_business_question", "unknown"]:
         response = answer_general_or_calculation(db, question)
     else:

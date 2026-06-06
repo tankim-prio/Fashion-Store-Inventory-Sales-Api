@@ -21,6 +21,7 @@ from app.models import (
 
 from app.routers import (
     ai_assistant,
+    ml,
     auth,
     categories,
     customers,
@@ -39,7 +40,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Fashion Store Inventory API",
     description="Secure backend API for fashion store inventory, sales, orders, payments, reports and AI assistant.",
-    version="1.3.0"
+    version="1.4.0"
 )
 
 
@@ -129,6 +130,7 @@ app.include_router(payments.router, dependencies=staff_or_admin)
 app.include_router(invoices.router, dependencies=staff_or_admin)
 app.include_router(reports.router, dependencies=staff_or_admin)
 app.include_router(ai_assistant.router, dependencies=staff_or_admin)
+app.include_router(ml.router, dependencies=staff_or_admin)
 
 app.mount("/site", StaticFiles(directory="frontend", html=True), name="site")
 

@@ -9,3 +9,6 @@ __pycache__/
 test_fashion_store.db
 __pycache__/
 *.pyc
+
+# Docker local env
+.env.docker

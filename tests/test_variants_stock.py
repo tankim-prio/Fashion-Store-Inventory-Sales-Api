@@ -1,28 +1,35 @@
+from uuid import uuid4
+
 def create_category_product(client, headers):
+    suffix = uuid4().hex[:8]
+
     category_response = client.post(
         "/categories/",
         json={
-            "name": "Shirt",
+            "name": f"Test Shirt {suffix}",
             "description": "Men shirt"
         },
         headers=headers
     )
+
+    assert category_response.status_code == 200, category_response.text
 
     category_id = category_response.json()["id"]
 
     product_response = client.post(
         "/products/",
         json={
-            "name": "Formal Shirt",
-            "category_id": category_id,
-            "brand": "Anchor",
-            "description": "Formal shirt"
+            "name": f"Test Product {suffix}",
+            "description": "Test product",
+            "brand": "Test Brand",
+            "category_id": category_id
         },
         headers=headers
     )
 
-    return product_response.json()["id"]
+    assert product_response.status_code == 200, product_response.text
 
+    return product_response.json()["id"]
 
 def test_create_variant(client, admin_headers):
     product_id = create_category_product(client, admin_headers)
@@ -36,17 +43,17 @@ def test_create_variant(client, admin_headers):
             "buy_price": 500,
             "sell_price": 900,
             "stock_quantity": 20,
-            "sku": "SHIRT-WHITE-L-TEST"
+            "sku": f"SHIRT-WHITE-L-TEST-{uuid4().hex[:6]}"
         },
         headers=admin_headers
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
     data = response.json()
 
     assert data["product_id"] == product_id
-    assert data["sku"] == "SHIRT-WHITE-L-TEST"
+    assert data["sku"].startswith("SHIRT-WHITE-L-TEST-")
     assert data["stock_quantity"] == 20
 
 
@@ -83,10 +90,12 @@ def test_add_stock(client, admin_headers):
             "buy_price": 400,
             "sell_price": 700,
             "stock_quantity": 5,
-            "sku": "SHIRT-BLUE-M-TEST"
+            "sku": f"SHIRT-BLUE-M-TEST-{uuid4().hex[:6]}"
         },
         headers=admin_headers
     )
+
+    assert variant_response.status_code == 200, variant_response.text
 
     variant_id = variant_response.json()["id"]
 
@@ -101,7 +110,7 @@ def test_add_stock(client, admin_headers):
         headers=admin_headers
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
 
 def test_add_stock_zero_quantity_blocked(client, admin_headers):

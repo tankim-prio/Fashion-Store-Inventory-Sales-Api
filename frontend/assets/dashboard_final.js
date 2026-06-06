@@ -1957,6 +1957,16 @@ function loadAiAssistantPage() {
                         <button onclick="askAiSuggestion('total stock value')">Total stock value</button>
                         <button onclick="askAiSuggestion('show recent products')">Recent products</button>
                     </div>
+
+                    <div class="ai-question-group">
+                        <h4>Predictive Analytics</h4>
+                        <button onclick="askAiSuggestion('show analytics overview')">Analytics overview</button>
+                        <button onclick="askAiSuggestion('forecast next 7 days sales')">Forecast next 7 days sales</button>
+                        <button onclick="askAiSuggestion('which products should I restock?')">Restock plan</button>
+                        <button onclick="askAiSuggestion('show customer insights')">Customer insights</button>
+                        <button onclick="askAiSuggestion('who are my VIP customers?')">VIP customers</button>
+                        <button onclick="askAiSuggestion('recommend products for customer 1')">Recommend for customer</button>
+                    </div>
                 </div>
             </aside>
 
@@ -2162,4 +2172,347 @@ async function apiDelete(url) {
     return apiRequest(url, {
         method: "DELETE"
     });
+}
+
+
+
+
+
+/* ML Insights */
+
+function analyticsNumberValue(id, defaultValue, minValue, maxValue) {
+    const input = document.getElementById(id);
+
+    if (!input) return defaultValue;
+
+    let value = parseInt(input.value || defaultValue);
+
+    if (isNaN(value)) value = defaultValue;
+
+    if (value < minValue) {
+        value = minValue;
+        input.value = minValue;
+        showToastMessage(`${prettifyKey(id)} cannot be less than ${minValue}. I changed it to ${minValue}.`);
+    }
+
+    if (value > maxValue) {
+        value = maxValue;
+        input.value = maxValue;
+        showToastMessage(`${prettifyKey(id)} cannot be more than ${maxValue}. I changed it to ${maxValue}.`);
+    }
+
+    return value;
+}
+
+function showToastMessage(message) {
+    let toast = document.getElementById("analyticsToast");
+
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "analyticsToast";
+        toast.className = "analytics-toast";
+        document.body.appendChild(toast);
+    }
+
+    toast.innerText = message;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3500);
+}
+
+function renderMlMetrics(metrics) {
+    if (!metrics) return "";
+
+    let html = `<div class="analytics-metrics-grid">`;
+
+    Object.entries(metrics).forEach(([key, value]) => {
+        html += `
+            <div class="analytics-metric-card">
+                <span>${prettifyKey(key)}</span>
+                <strong>${value}</strong>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+function renderMlRows(rows) {
+    if (!Array.isArray(rows) || rows.length === 0) {
+        return `<p class="ai-empty">No data found yet. Add more orders, products, customers and stock data to get stronger analytics.</p>`;
+    }
+
+    return renderTable(rows);
+}
+
+function renderMlResponse(response) {
+    const data = response.data || {};
+    const metrics = data.metrics || {};
+    const rows = data.rows || null;
+    const modules = data.modules || null;
+
+    let html = `
+        <div class="analytics-result-header">
+            <div>
+                <span class="analytics-label">Analytics Result</span>
+                <h2>${response.title}</h2>
+                <p>${response.summary}</p>
+            </div>
+        </div>
+    `;
+
+    html += renderMlMetrics(metrics);
+
+    if (Array.isArray(modules)) {
+        html += `<div class="analytics-module-list">`;
+
+        modules.forEach(item => {
+            html += `<span>${item}</span>`;
+        });
+
+        html += `</div>`;
+    }
+
+    if (rows) {
+        html += `
+            <div class="content-box">
+                <h2>Detailed Data</h2>
+                ${renderMlRows(rows)}
+            </div>
+        `;
+    }
+
+    return html;
+}
+
+function loadMlInsightsPage() {
+    closeMobileMenu();
+
+    setPage("Predictive Analytics", "Forecast sales, predict stock risk, plan reorders, segment customers and recommend products.");
+
+    setContent(`
+        <div class="analytics-page">
+
+            <section class="analytics-intro">
+                <div>
+                    <span class="analytics-label">Business Intelligence</span>
+                    <h2>Predictive Analytics Dashboard</h2>
+                    <p>
+                        Analyze your store data and make smarter decisions about sales, stock, restock quantity,
+                        customers and product recommendations.
+                    </p>
+                </div>
+            </section>
+
+            <section class="analytics-card-grid">
+                <button class="analytics-card-btn" onclick="loadMlSummary()">
+                    <span>Overview</span>
+                    <strong>Analytics Overview</strong>
+                    <small>See total stock, forecast, restock needs and business intelligence summary.</small>
+                </button>
+
+                <button class="analytics-card-btn" onclick="loadSalesForecast()">
+                    <span>Forecast</span>
+                    <strong>Sales Forecast</strong>
+                    <small>Estimate upcoming sales using recent order history.</small>
+                </button>
+
+                <button class="analytics-card-btn" onclick="loadLowStockPrediction()">
+                    <span>Stock Risk</span>
+                    <strong>Stock Risk Prediction</strong>
+                    <small>Find products that may run out soon based on recent sales speed.</small>
+                </button>
+
+                <button class="analytics-card-btn" onclick="loadReorderRecommendations()">
+                    <span>Reorder</span>
+                    <strong>Restock Plan</strong>
+                    <small>See which products you should buy again, how many pieces are needed, and estimated buying budget.</small>
+                </button>
+
+                <button class="analytics-card-btn" onclick="loadCustomerSegments()">
+                    <span>Customers</span>
+                    <strong>Customer Insights</strong>
+                    <small>Analyze customers by purchase behavior, spending and last purchase.</small>
+                </button>
+
+                <button class="analytics-card-btn" onclick="loadProductRecommendations()">
+                    <span>Products</span>
+                    <strong>Product Recommendations</strong>
+                    <small>Recommend products using popularity, stock and customer purchase history.</small>
+                </button>
+            </section>
+
+            <section class="analytics-controls">
+                <div class="content-box analytics-settings-card">
+                    <h2>Prediction Settings</h2>
+                    <p class="analytics-help-text">
+                        These settings control Sales Forecast, Stock Risk and Restock Plan.
+                    </p>
+
+                    <div class="analytics-input-grid">
+                        <div class="analytics-field">
+                            <label for="analyticsForecastDays">Forecast Days</label>
+                            <input id="analyticsForecastDays" type="number" value="7" min="1" max="30">
+                            <small>How many future days you want to predict. Example: 7 days.</small>
+                        </div>
+
+                        <div class="analytics-field">
+                            <label for="analyticsLookbackDays">Previous Sales Data Days</label>
+                            <input id="analyticsLookbackDays" type="number" value="30" min="7" max="90">
+                            <small>How many past days of orders should be analyzed. Minimum: 7 days.</small>
+                        </div>
+                    </div>
+
+                    <div class="analytics-settings-actions">
+                        <button onclick="loadSalesForecast()">Run Sales Forecast</button>
+                        <button onclick="loadLowStockPrediction()">Check Stock Risk</button>
+                        <button onclick="loadReorderRecommendations()">Create Restock Plan</button>
+                    </div>
+                </div>
+
+                <div class="content-box analytics-settings-card">
+                    <h2>Customer-based Recommendation</h2>
+                    <p class="analytics-help-text">
+                        Enter a customer ID to recommend products based on that customer?s buying behavior.
+                    </p>
+
+                    <div class="analytics-field">
+                        <label for="mlCustomerId">Customer ID</label>
+                        <input id="mlCustomerId" type="number" placeholder="Example: 1">
+                        <small>You can get customer ID from the Customers section or API data.</small>
+                    </div>
+
+                    <div class="analytics-settings-actions single">
+                        <button onclick="loadProductRecommendationsForCustomer()">Recommend Products</button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="mlOutput" class="analytics-output">
+                <div class="content-box">
+                    <h2>Analytics Ready</h2>
+                    <p>Select any analytics module above to generate business insights.</p>
+                </div>
+            </div>
+
+        </div>
+    `);
+
+    loadMlSummary();
+}
+
+async function showMlLoading(title = "Loading analytics...") {
+    const output = document.getElementById("mlOutput");
+
+    if (!output) return;
+
+    output.innerHTML = `
+        <div class="analytics-loading-box">
+            <div class="ai-loader"></div>
+            <div>
+                <h2>${title}</h2>
+                <p>Analyzing your store data...</p>
+            </div>
+        </div>
+    `;
+}
+
+async function loadMlSummary() {
+    showMlLoading("Loading Analytics Overview");
+
+    try {
+        const response = await apiGet("/ml/summary");
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadSalesForecast() {
+    showMlLoading("Generating Sales Forecast");
+
+    const days = analyticsNumberValue("analyticsForecastDays", 7, 1, 30);
+    const lookbackDays = analyticsNumberValue("analyticsLookbackDays", 30, 7, 90);
+
+    try {
+        const response = await apiGet(`/ml/sales-forecast?days=${days}&lookback_days=${lookbackDays}`);
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadLowStockPrediction() {
+    showMlLoading("Predicting Stock Risk");
+
+    const lookbackDays = analyticsNumberValue("analyticsLookbackDays", 30, 7, 90);
+
+    try {
+        const response = await apiGet(`/ml/low-stock-prediction?lookback_days=${lookbackDays}`);
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadReorderRecommendations() {
+    showMlLoading("Generating Restock Plan");
+
+    const lookbackDays = analyticsNumberValue("analyticsLookbackDays", 30, 7, 90);
+
+    try {
+        const response = await apiGet(`/ml/reorder-recommendations?lookback_days=${lookbackDays}&lead_time_days=7&safety_days=5`);
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `
+            <div class="content-box">
+                <h2>Restock Plan Error</h2>
+                <p class="error-text">${error.message}</p>
+                <p>Please check that your products, variants, stock and order data are available.</p>
+            </div>
+        `;
+    }
+}
+
+async function loadCustomerSegments() {
+    showMlLoading("Analyzing Customers");
+
+    try {
+        const response = await apiGet("/ml/customer-segments");
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadProductRecommendations() {
+    showMlLoading("Generating Product Recommendations");
+
+    try {
+        const response = await apiGet("/ml/product-recommendations?limit=10");
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
+}
+
+async function loadProductRecommendationsForCustomer() {
+    const customerId = document.getElementById("mlCustomerId").value;
+
+    if (!customerId) {
+        alert("Please enter a customer ID.");
+        return;
+    }
+
+    showMlLoading("Generating Customer Product Recommendations");
+
+    try {
+        const response = await apiGet(`/ml/product-recommendations/${customerId}?limit=10`);
+        document.getElementById("mlOutput").innerHTML = renderMlResponse(response);
+    } catch (error) {
+        document.getElementById("mlOutput").innerHTML = `<p class="error-text">${error.message}</p>`;
+    }
 }

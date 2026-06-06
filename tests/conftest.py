@@ -1,79 +1,102 @@
-import pytest
+﻿import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.database import Base, get_db
-from app.models import (
-    category,
-    customer,
-    invoice,
-    order,
-    payment,
-    product,
-    product_variant,
-    stock,
-    user,
-)
+from app.database import SessionLocal
+from app.models.user import User
 
-TEST_DATABASE_URL = "sqlite:///./test_fashion_store.db"
-
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
-TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+try:
+    from app.utils.security import get_password_hash
+except Exception:
+    from app.utils.security import hash_password as get_password_hash
 
 
-def override_get_db():
-    db = TestingSessionLocal()
+TEST_ADMIN_EMAIL = "admin.demo@gmail.com"
+TEST_ADMIN_PASSWORD = "123456"
+
+
+def model_has_column(model, column_name):
+    return column_name in model.__table__.columns.keys()
+
+
+def set_if_exists(obj, field_name, value):
+    if model_has_column(obj.__class__, field_name):
+        setattr(obj, field_name, value)
+
+
+def get_password_column_name():
+    possible_columns = [
+        "password_hash",
+        "hashed_password",
+        "password",
+        "password_hashed",
+    ]
+
+    for column in possible_columns:
+        if model_has_column(User, column):
+            return column
+
+    raise RuntimeError(
+        "No password column found in User model. Expected one of: "
+        "password_hash, hashed_password, password, password_hashed"
+    )
+
+
+def ensure_test_admin_user():
+    db = SessionLocal()
 
     try:
-        yield db
+        password_column = get_password_column_name()
+        hashed_password = get_password_hash(TEST_ADMIN_PASSWORD)
+
+        user = db.query(User).filter(User.email == TEST_ADMIN_EMAIL).first()
+
+        if not user:
+            user = User()
+            db.add(user)
+
+        set_if_exists(user, "full_name", "Demo Admin")
+        set_if_exists(user, "name", "Demo Admin")
+        set_if_exists(user, "email", TEST_ADMIN_EMAIL)
+        set_if_exists(user, "phone", "01700000001")
+        set_if_exists(user, "role", "admin")
+        set_if_exists(user, "is_active", True)
+
+        setattr(user, password_column, hashed_password)
+
+        db.commit()
+        db.refresh(user)
+
     finally:
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def client():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    app.dependency_overrides.clear()
 
     with TestClient(app) as test_client:
         yield test_client
 
-    Base.metadata.drop_all(bind=engine)
+    app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope="function")
-def admin_token(client):
+@pytest.fixture(scope="session")
+def admin_headers(client):
+    ensure_test_admin_user()
+
     response = client.post(
-        "/auth/register",
-        json={
-            "full_name": "Admin User",
-            "email": "admin@test.com",
-            "password": "123456"
-        }
+        "/auth/login",
+        data={
+            "username": TEST_ADMIN_EMAIL,
+            "password": TEST_ADMIN_PASSWORD,
+        },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
-    data = response.json()
+    token = response.json()["access_token"]
 
-    return data["access_token"]
-
-
-@pytest.fixture(scope="function")
-def admin_headers(admin_token):
     return {
-        "Authorization": f"Bearer {admin_token}"
+        "Authorization": f"Bearer {token}"
     }
