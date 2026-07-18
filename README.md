@@ -29,21 +29,15 @@ This is not only a CRUD project. It includes authentication, role-based access, 
 
 Watch the complete demonstration of the **Fashion Store Inventory & Sales API**, featuring its FastAPI backend, inventory and sales workflows, AI Assistant, predictive analytics, authentication, reporting, and administrative dashboard.
 
-<p align="center">
-  <a href="https://youtu.be/KSIN9vOkGxg">
-    <img
-      src="assets/project-demo-thumbnail.png"
-      alt="Watch the Fashion Store Inventory and Sales API Project Demonstration"
-      width="850"
-    >
-  </a>
-</p>
+[![Watch the Fashion Store API Project Demonstration](assets/project-demo-thumbnail.png)](https://youtu.be/KSIN9vOkGxg)
 
 <p align="center">
   <a href="https://youtu.be/KSIN9vOkGxg">
     <strong>▶ Watch the Complete Project Demonstration on YouTube</strong>
   </a>
 </p>
+
+---
 
 ### Demonstration Highlights
 
