@@ -27,106 +27,123 @@ This is not only a CRUD project. It includes authentication, role-based access, 
 ---
 ## 📸 Application Screenshots
 
-Explore the complete web dashboard, including inventory management, AI-powered assistance, predictive analytics, sales operations, reporting, invoicing, and user administration.
+A visual overview of the Fashion Store platform, covering its dashboard, AI-powered features, inventory operations, sales workflow, reporting, and user administration.
 
-<details open>
-<summary><strong>Dashboard, AI Assistant and Analytics</strong></summary>
+---
 
-<br>
+### 1. Dashboard, AI Assistant and Analytics
 
-### Dashboard
+#### Dashboard
+
+Business overview featuring product, stock, order, profit, and recent activity summaries.
 
 ![Fashion Store Dashboard](<assets/screenshots/01. Dashboard.jpeg>)
 
-### AI Assistant
+#### AI Assistant
+
+An AI-powered assistant for answering questions about sales, customers, payments, products, and stock.
 
 ![AI Business Assistant](<assets/screenshots/02. AI Assistant.jpeg>)
 
-### Predictive Analytics
+#### Predictive Analytics
+
+Business intelligence for sales forecasting, stock-risk prediction, restock planning, customer insights, and product recommendations.
 
 ![Predictive Analytics Dashboard](<assets/screenshots/03. Analytics.jpeg>)
 
-</details>
+---
 
-<details>
-<summary><strong>Product and Inventory Management</strong></summary>
+### 2. Product and Inventory Management
 
-<br>
+#### Categories
 
-### Categories
+Create, view, update, and manage product categories.
 
 ![Category Management](<assets/screenshots/04. Categories.jpeg>)
 
-### Products
+#### Products
+
+Create, search, update, and manage fashion products.
 
 ![Product Management](<assets/screenshots/05. Products.jpeg>)
 
-### Product Variants
+#### Product Variants
+
+Manage product sizes, colours, prices, stock quantities, and SKUs.
 
 ![Product Variant Management](<assets/screenshots/06. Variants.jpeg>)
 
-### Stock Management
+#### Stock Management
+
+Monitor current stock, record stock movements, review stock history, and identify low-stock items.
 
 ![Stock Management](<assets/screenshots/07. Stock Management.jpeg>)
 
-</details>
+---
 
-<details>
-<summary><strong>Customers, Orders and Payments</strong></summary>
+### 3. Customers, Orders and Payments
 
-<br>
+#### Customers
 
-### Customers
+Create, search, update, and manage customer records.
 
 ![Customer Management](<assets/screenshots/08. Customers.jpeg>)
 
-### Orders
+#### Orders
+
+Create customer orders, apply discounts, and monitor order status.
 
 ![Order Management](<assets/screenshots/09. Orders.jpeg>)
 
-### Payments
+#### Payments
+
+Record payments using different methods and track pending or completed transactions.
 
 ![Payment Management](<assets/screenshots/10. Payments.jpeg>)
 
-</details>
+---
 
-<details>
-<summary><strong>Invoices and Business Reports</strong></summary>
+### 4. Invoices and Business Reports
 
-<br>
+#### Invoices
 
-### Invoices
+Generate, preview, print, and download customer invoices.
 
 ![Invoice Generation and Preview](<assets/screenshots/11. Invoices.jpeg>)
 
-### Reports
+#### Reports
+
+Review daily and monthly sales, top products, profit, and low-stock reports.
 
 ![Sales and Inventory Reports](<assets/screenshots/12. Reports.jpeg>)
 
-</details>
+---
 
-<details>
-<summary><strong>User Management and Authentication</strong></summary>
+### 5. User Management and Authentication
 
-<br>
+#### User Management
 
-### User Management
+Create and manage admin or staff accounts with role and account-status controls.
 
 ![Admin and Staff User Management](<assets/screenshots/13. User Management.jpeg>)
 
-### User Profile
+#### User Profile
+
+View account information and access profile-management options.
 
 ![User Profile](<assets/screenshots/14. Profile Icon.jpeg>)
 
-### Edit Profile
+#### Edit Profile
+
+Update the authenticated user’s name and phone information.
 
 ![Profile Editing](<assets/screenshots/15. Profile (Edit).jpeg>)
 
-### Login
+#### Login
+
+Secure login interface for registered admin and staff accounts.
 
 ![Authentication Login](<assets/screenshots/16. Login.jpeg>)
-
-</details>
 
 ---
 
