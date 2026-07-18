@@ -25,6 +25,57 @@ The system allows store admins and staff to:
 This is not only a CRUD project. It includes authentication, role-based access, business logic, AI Assistant, predictive analytics, frontend integration, demo data, documentation, and automated tests.
 
 ---
+## 📸 Application Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/01-dashboard.jpeg)
+
+### AI Assistant
+![AI Assistant](docs/screenshots/02-ai-assistant.jpeg)
+
+### Predictive Analytics
+![Predictive Analytics](docs/screenshots/03-analytics.jpeg)
+
+### Categories
+![Categories](docs/screenshots/04-categories.jpeg)
+
+### Products
+![Products](docs/screenshots/05-products.jpeg)
+
+### Product Variants
+![Product Variants](docs/screenshots/06-variants.jpeg)
+
+### Stock Management
+![Stock Management](docs/screenshots/07-stock-management.jpeg)
+
+### Customers
+![Customers](docs/screenshots/08-customers.jpeg)
+
+### Orders
+![Orders](docs/screenshots/09-orders.jpeg)
+
+### Payments
+![Payments](docs/screenshots/10-payments.jpeg)
+
+### Invoices
+![Invoices](docs/screenshots/11-invoices.jpeg)
+
+### Reports
+![Reports](docs/screenshots/12-reports.jpeg)
+
+### User Management
+![User Management](docs/screenshots/13-user-management.jpeg)
+
+### Profile
+![Profile](docs/screenshots/14-profile.jpeg)
+
+### Edit Profile
+![Edit Profile](docs/screenshots/15-edit-profile.jpeg)
+
+### Login
+![Login](docs/screenshots/16-login.jpeg)
+
+---
 
 ## Key Features
 
