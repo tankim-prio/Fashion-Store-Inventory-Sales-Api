@@ -25,7 +25,44 @@ The system allows store admins and staff to:
 This is not only a CRUD project. It includes authentication, role-based access, business logic, AI Assistant, predictive analytics, frontend integration, demo data, documentation, and automated tests.
 
 ---
-## 📸 Application Screenshots
+## Project Demonstration
+
+A complete walkthrough of the **Fashion Store Inventory & Sales API**, demonstrating the FastAPI backend, inventory and sales workflows, AI Assistant, predictive analytics, authentication, reporting, and administrative dashboard.
+
+<p align="center">
+  <a href="https://youtu.be/KSIN9vOkGxg">
+    <img
+      src="https://img.youtube.com/vi/KSIN9vOkGxg/maxresdefault.jpg"
+      alt="Fashion Store Inventory and Sales API — Complete Project Demonstration"
+      width="850"
+    >
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/KSIN9vOkGxg">
+    <img
+      src="https://img.shields.io/badge/Watch_Complete_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"
+      alt="Watch the complete project demonstration on YouTube"
+    >
+  </a>
+</p>
+
+### Demonstration Highlights
+
+- Dashboard and business overview
+- AI-powered business assistant
+- Predictive analytics and product recommendations
+- Category, product and variant management
+- Inventory tracking and stock history
+- Customer, order and payment workflows
+- Invoice generation and business reports
+- Authentication, profiles and role-based user management
+
+> **Source Code:** This repository contains the complete FastAPI application, setup instructions, API documentation, Docker configuration, and automated tests.
+
+---
+## Application Screenshots
 
 A visual overview of the Fashion Store platform, covering its dashboard, AI-powered features, inventory operations, sales workflow, reporting, and user administration.
 
