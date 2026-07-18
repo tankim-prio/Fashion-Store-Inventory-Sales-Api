@@ -27,53 +27,106 @@ This is not only a CRUD project. It includes authentication, role-based access, 
 ---
 ## 📸 Application Screenshots
 
+Explore the complete web dashboard, including inventory management, AI-powered assistance, predictive analytics, sales operations, reporting, invoicing, and user administration.
+
+<details open>
+<summary><strong>Dashboard, AI Assistant and Analytics</strong></summary>
+
+<br>
+
 ### Dashboard
-![Dashboard](docs/screenshots/01-dashboard.jpeg)
+
+![Fashion Store Dashboard](<assets/screenshots/01. Dashboard.jpeg>)
 
 ### AI Assistant
-![AI Assistant](docs/screenshots/02-ai-assistant.jpeg)
+
+![AI Business Assistant](<assets/screenshots/02. AI Assistant.jpeg>)
 
 ### Predictive Analytics
-![Predictive Analytics](docs/screenshots/03-analytics.jpeg)
+
+![Predictive Analytics Dashboard](<assets/screenshots/03. Analytics.jpeg>)
+
+</details>
+
+<details>
+<summary><strong>Product and Inventory Management</strong></summary>
+
+<br>
 
 ### Categories
-![Categories](docs/screenshots/04-categories.jpeg)
+
+![Category Management](<assets/screenshots/04. Categories.jpeg>)
 
 ### Products
-![Products](docs/screenshots/05-products.jpeg)
+
+![Product Management](<assets/screenshots/05. Products.jpeg>)
 
 ### Product Variants
-![Product Variants](docs/screenshots/06-variants.jpeg)
+
+![Product Variant Management](<assets/screenshots/06. Variants.jpeg>)
 
 ### Stock Management
-![Stock Management](docs/screenshots/07-stock-management.jpeg)
+
+![Stock Management](<assets/screenshots/07. Stock Management.jpeg>)
+
+</details>
+
+<details>
+<summary><strong>Customers, Orders and Payments</strong></summary>
+
+<br>
 
 ### Customers
-![Customers](docs/screenshots/08-customers.jpeg)
+
+![Customer Management](<assets/screenshots/08. Customers.jpeg>)
 
 ### Orders
-![Orders](docs/screenshots/09-orders.jpeg)
+
+![Order Management](<assets/screenshots/09. Orders.jpeg>)
 
 ### Payments
-![Payments](docs/screenshots/10-payments.jpeg)
+
+![Payment Management](<assets/screenshots/10. Payments.jpeg>)
+
+</details>
+
+<details>
+<summary><strong>Invoices and Business Reports</strong></summary>
+
+<br>
 
 ### Invoices
-![Invoices](docs/screenshots/11-invoices.jpeg)
+
+![Invoice Generation and Preview](<assets/screenshots/11. Invoices.jpeg>)
 
 ### Reports
-![Reports](docs/screenshots/12-reports.jpeg)
+
+![Sales and Inventory Reports](<assets/screenshots/12. Reports.jpeg>)
+
+</details>
+
+<details>
+<summary><strong>User Management and Authentication</strong></summary>
+
+<br>
 
 ### User Management
-![User Management](docs/screenshots/13-user-management.jpeg)
 
-### Profile
-![Profile](docs/screenshots/14-profile.jpeg)
+![Admin and Staff User Management](<assets/screenshots/13. User Management.jpeg>)
+
+### User Profile
+
+![User Profile](<assets/screenshots/14. Profile Icon.jpeg>)
 
 ### Edit Profile
-![Edit Profile](docs/screenshots/15-edit-profile.jpeg)
+
+![Profile Editing](<assets/screenshots/15. Profile (Edit).jpeg>)
 
 ### Login
-![Login](docs/screenshots/16-login.jpeg)
+
+![Authentication Login](<assets/screenshots/16. Login.jpeg>)
+
+</details>
 
 ---
 
