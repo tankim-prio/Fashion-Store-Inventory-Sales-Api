@@ -25,11 +25,21 @@ The system allows store admins and staff to:
 This is not only a CRUD project. It includes authentication, role-based access, business logic, AI Assistant, predictive analytics, frontend integration, demo data, documentation, and automated tests.
 
 ---
-## Project Demonstration
+## 🎥 Project Demonstration
 
-Watch the complete demonstration of the **Fashion Store Inventory & Sales API**, featuring its FastAPI backend, inventory and sales workflows, AI Assistant, predictive analytics, authentication, reporting, and administrative dashboard.
+Watch the complete walkthrough of the **Fashion Store Inventory & Sales API**—a FastAPI-based platform designed to manage inventory, customers, orders, payments, invoices, reporting, and administrative operations.
 
-[![Watch the Fashion Store API Project Demonstration](assets/project-demo-thumbnail.png)](https://youtu.be/KSIN9vOkGxg)
+The demonstration also presents the integrated **AI Assistant** and business analytics capabilities for sales forecasting, stock-risk analysis, restock planning, customer insights, and product recommendations.
+
+<p align="center">
+  <a href="https://youtu.be/KSIN9vOkGxg">
+    <img
+      src="assets/screenshots/project-demo-thumbnail.png"
+      alt="Fashion Store Inventory and Sales API — Complete Project Demonstration"
+      width="850"
+    >
+  </a>
+</p>
 
 <p align="center">
   <a href="https://youtu.be/KSIN9vOkGxg">
@@ -37,20 +47,15 @@ Watch the complete demonstration of the **Fashion Store Inventory & Sales API**,
   </a>
 </p>
 
----
-
 ### Demonstration Highlights
 
 - Dashboard and business overview
 - AI-powered business assistant
 - Predictive analytics and product recommendations
-- Category, product and variant management
-- Inventory tracking and stock history
+- Product, variant and inventory management
 - Customer, order and payment workflows
-- Invoice generation and business reports
-- Authentication, profiles and role-based user management
-
-> **Source Code:** This repository contains the complete FastAPI application, setup instructions, API documentation, Docker configuration, and automated tests.
+- Invoice generation and business reporting
+- Authentication and role-based user management
 
 ---
 ## Application Screenshots
