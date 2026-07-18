@@ -27,13 +27,13 @@ This is not only a CRUD project. It includes authentication, role-based access, 
 ---
 ## Project Demonstration
 
-A complete walkthrough of the **Fashion Store Inventory & Sales API**, demonstrating the FastAPI backend, inventory and sales workflows, AI Assistant, predictive analytics, authentication, reporting, and administrative dashboard.
+Watch the complete demonstration of the **Fashion Store Inventory & Sales API**, featuring its FastAPI backend, inventory and sales workflows, AI Assistant, predictive analytics, authentication, reporting, and administrative dashboard.
 
 <p align="center">
   <a href="https://youtu.be/KSIN9vOkGxg">
     <img
-      src="https://img.youtube.com/vi/KSIN9vOkGxg/maxresdefault.jpg"
-      alt="Fashion Store Inventory and Sales API — Complete Project Demonstration"
+      src="assets/project-demo-thumbnail.png"
+      alt="Watch the Fashion Store Inventory and Sales API Project Demonstration"
       width="850"
     >
   </a>
@@ -41,10 +41,7 @@ A complete walkthrough of the **Fashion Store Inventory & Sales API**, demonstra
 
 <p align="center">
   <a href="https://youtu.be/KSIN9vOkGxg">
-    <img
-      src="https://img.shields.io/badge/Watch_Complete_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"
-      alt="Watch the complete project demonstration on YouTube"
-    >
+    <strong>▶ Watch the Complete Project Demonstration on YouTube</strong>
   </a>
 </p>
 
